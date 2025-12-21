@@ -5,7 +5,7 @@ namespace RustAI
 {
     internal static class PlayerHandler
     {
-        public static async Task<JsonDocument?> GetBattlemetricsJson(string playerId, string includeFlags = "")
+        public static async Task<JsonDocument?> GetJson(string playerId, string includeFlags = "")
         {
             try
             {
@@ -67,6 +67,11 @@ namespace RustAI
             catch { return "N/A"; }
         }
 
+        public static bool IsUserEntered(List<string> players, string userID)
+        {
+            return players.Contains(userID);
+        }
+
         public static async Task<string> GetCreationDate(JsonDocument doc)
         {
             try
@@ -121,7 +126,7 @@ namespace RustAI
                      .EnumerateArray().Select(x => new
                      {
                          Name = x.GetProperty("attributes").GetProperty("name").GetString(),
-                         TimePlayed = Utils.ConvertSecondsToTimeFormat(x.GetProperty("meta").GetProperty("timePlayed").GetInt64()),
+                         TimePlayed = Date.ConvertSecondsToTimeFormat(x.GetProperty("meta").GetProperty("timePlayed").GetInt64()),
                      });
 
                 var result = $"# Found {listOfServers.Count()} servers.\n______________________________________________\n\n";
@@ -150,7 +155,7 @@ namespace RustAI
                 foreach (var server in listOfServers)
                     totalTime += server.Time;
 
-                var result = $"{Utils.ConvertSecondsToTimeFormat(totalTime).Split(':')[0]} hours";
+                var result = $"{Date.ConvertSecondsToTimeFormat(totalTime).Split(':')[0]} hours";
                 return result;
             }
             catch { return "N/A"; }
@@ -211,7 +216,7 @@ namespace RustAI
 
                 var parsedDate = DateTime.Parse(latestDate);
                 var time = (DateTime.Now - parsedDate).TotalDays;
-                var formattedDate = Utils.PrettyElapsed(time);
+                var formattedDate = Date.PrettyElapsed(time);
 
                 return $"{latestName} ({formattedDate})";
             }
@@ -248,7 +253,7 @@ namespace RustAI
 
                 var parsedDate = DateTime.Parse(earliestDate);
                 var time = (DateTime.Now - parsedDate).TotalDays;
-                var formattedDate = Utils.PrettyElapsed(time);
+                var formattedDate = Date.PrettyElapsed(time);
 
                 return $"{earliestName} ({formattedDate})";
             }
@@ -280,7 +285,7 @@ namespace RustAI
                     }
                 }
 
-                return $"{serverName} ({Utils.ConvertSecondsToTimeFormat(maxPlayedTime).Split(':')[0]} hours)";
+                return $"{serverName} ({Date.ConvertSecondsToTimeFormat(maxPlayedTime).Split(':')[0]} hours)";
             }
             catch { return "N/A"; }
         }
@@ -288,13 +293,13 @@ namespace RustAI
         public static async Task<string> GetPlayerFullInformation(JsonDocument doc)
         {
             return
-   "🎮 Player Statistics\n" +
+   "🎮 <b>Player Statistics</b>\n" +
    "───────────────\n" +
-   $"👤 Name: {await GetName(doc)}\n" +
+   $"👤 Name: <b> {await GetName(doc)}</b>\n" +
    $"🆔 Battlemetrics ID: {await GetId(doc)}\n" +
    $"📅 Account Created: {await GetCreationDate(doc)}\n" +
    $"⏱ Total Time: {await GetTotalServerTime(doc)}\n\n" +
-   "🌐 Server History\n" +
+   "🌐 <b>Server History</b>\n" +
    "───────────────\n" +
    $"🟢  Current: {await GetCurrentServer(doc)}\n\n" +
    $"⏮ Last Played: {await GetLastServer(doc)}\n\n" +

@@ -5,11 +5,11 @@ namespace RustAI
 {
     internal static class ServerHandler
     {
-        public static async Task<JsonDocument?> GetJson(string serverId)
+        public static async Task<JsonDocument?> GetJson(string serverId, string includeFlags = "")
         {
             try
             {
-                var url = $"https://api.battlemetrics.com/servers/{serverId}";
+                var url = $"https://api.battlemetrics.com/servers/{serverId}?include={includeFlags}";
                 using HttpClient client = new HttpClient();
 
                 var response = await client.GetAsync(url);
@@ -383,6 +383,24 @@ namespace RustAI
             catch { return "N/A"; }
         }
 
+        public static List<string> GetPlayers(JsonDocument doc)
+        {
+            try
+            {
+                var players = doc?.RootElement.GetProperty("included")
+                    .EnumerateArray()
+                    .Select(x => x.GetProperty("relationships")
+                                  .GetProperty("player")
+                                  .GetProperty("data")
+                                  .GetProperty("id")
+                                  .GetString())
+                    .ToList();
+
+                return players ?? new List<string>();
+            }
+            catch { return new List<string>(); }
+        }
+
         public static async Task<int> GetPlayersCount(JsonDocument doc)
         {
             try
@@ -487,14 +505,14 @@ namespace RustAI
         public static async Task<string> GetServerFullInformation(JsonDocument doc)
         {
             return
-"🌐 Server Statistics\n" +
+"🌐 <b>Server Statistics</b>\n" +
    "───────────────\n" +
 $"│ 🏷️ Name: {await GetName(doc)}\n" +
 $"│ 🆔 Server ID: {await GetServerID(doc)}\n" +
 $"│ 📡 Status: {await GetStatus(doc)}\n" +
 $"│ 💥 Created at: {await GetCreationTime(doc)}\n" +
 "\n" +
-$"│ 🔗 Connect: client.connect {await GetAddress(doc)}\n" +
+$"│ 🔗 Connect: <code>client.connect {await GetAddress(doc)}</code>\n" +
 $"│ 🌐 IP: {await GetIP(doc)}\n" +
 $"│ 📍 Location: {await GetLocation(doc)}\n" +
 $"│ ♻ Last restart: {await GetLastRestart(doc)}\n" +
@@ -507,7 +525,9 @@ $"│ 👥 Group limit: {(await GetGroupLimit(doc) == 999999 ? "None" : await Ge
 $"│ 🕒 Last wipe: {await GetLastWipeDate(doc)}\n" +
 $"│ 🕒 Upcoming wipes: \n{await GetUpcomingWipes(doc)}" +
 "\n" +
-$"│ 🗺️ Map download: {await GetMapDownloadLink(doc)}\n" +
+$"│ 🗺️ Map download: {(await GetMapDownloadLink(doc) == "N/A"
+    ? "N/A"
+    : $"<a href=\"{await GetMapDownloadLink(doc)}\">Download</a>")}\n" +
 $"│ 🌱 Seed: {await GetMapSeed(doc)}\n" +
 $"│ ❄️ Snow: {await GetSnowPercentage(doc)}%\n" +
 $"│ 🏜️ Desert: {await GetDesertPercentage(doc)}%\n" +
@@ -524,8 +544,12 @@ $"│ ⭐ Premium: {await GetPremiumServer(doc)}\n" +
 $"│ 🔧 Modded: {await GetModdedServer(doc)}\n" +
 $"│ 🎁 Kits: {await GetKitsStatus(doc)}\n" +
 "\n" +
-$"│ 🔗 Website: \n│{await GetWebsite(doc)}\n" +
-$"│ 🔗 Battlemetrics: \n│https://www.battlemetrics.com/servers/rust/{doc}\n";
+$"| 🔗 Website: {(await GetWebsite(doc) == "N/A"
+    ? "N/A"
+    : $"<a href=\"{await GetWebsite(doc)}\">{await GetName(doc)}</a>")}\n" +
+$"| 🔗 Battlemetrics: {(await GetServerID(doc) == "N/A"
+    ? "N/A"
+    : $"<a href=\"https://www.battlemetrics.com/servers/rust/{await GetServerID(doc)}\">{await GetName(doc)}</a>")}";
         }
     }
 }

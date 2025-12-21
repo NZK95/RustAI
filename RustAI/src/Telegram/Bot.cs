@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using WindowsInput;
 using WindowsInput.Native;
 
@@ -11,14 +13,14 @@ namespace RustAI
 {
     public class TelegramBot
     {
-        private Status _status { get; set; }
-        private string _serverId { get; set; }
-        private string _playerId { get; set; }
-        private TelegramBotClient _telegramClient { get; set; }
-        private CancellationTokenSource _cancellation { get; set; }
-        private KeyboardFactory _keyboardFactory { get; set; }
+        private Status _status;
+        private int? _queueCount;
+        private string _serverId;
+        private string _playerId;
+        private TelegramBotClient _telegramClient;
+        private CancellationTokenSource _cancellation;
+        private KeyboardFactory _keyboardFactory;
         private readonly BotCommand[] _commands;
-
         private readonly string _botName;
 
         public TelegramBot()
@@ -33,17 +35,19 @@ namespace RustAI
                     new BotCommand(command: "about", description: "Show author and project information."),
                     new BotCommand(command: "players", description: "Show player information."),
                     new BotCommand(command: "servers", description: "Show server information."),
-                    new BotCommand(command: "trackadd", description: "Add player to track list."),
-                    new BotCommand(command: "trackremove", description: "Remove player from track list."),
-                    new BotCommand(command: "tracklist", description: "Show track list."),
-                    new BotCommand(command: "trackclear", description: "Clear track list."),
-                    new BotCommand(command: "connect", description: "Connect to server."),
                     new BotCommand(command: "launch", description: "Launch rust."),
                     new BotCommand(command: "quit", description: "Quit rust."),
-
+                    new BotCommand(command: "connect", description: "Connect to server."),
+                    new BotCommand(command: "connection_status", description: "Show connection status in screenshot format."),
+                    new BotCommand(command: "disconnect", description: "Disconnect from the server."),
+                    new BotCommand(command: "track_add", description: "Add player to track list."),
+                    new BotCommand(command: "track_remove", description: "Remove player from track list."),
+                    new BotCommand(command: "track_list", description: "Show track list."),
+                    new BotCommand(command: "track_clear", description: "Clear track list."),
             };
 
-            _ = MonitorTrackedPlayersAsync();
+            var monitorPlayers = new MonitorTrackedPlayers(this, _cancellation);
+            _ = monitorPlayers.MonitorTrackedPlayersAsync();
         }
 
         public async Task InitAsync()
@@ -69,6 +73,13 @@ namespace RustAI
             var me = _telegramClient.GetMe();
 
             await SendMessageAsync(Messages.ProgramRunning);
+        }
+
+        public async Task ShutdownAsync()
+        {
+            await SendMessageAsync(Messages.ProgramShutdown);
+            _cancellation.Cancel();
+            await Task.Delay(500);
         }
 
         private async Task DiscardOldUpdatesAsync()
@@ -124,6 +135,13 @@ namespace RustAI
             {
                 case Status.WAITING_FOR_SERVER_ID_INFO:
                     {
+                        while (!IsIDValid(message))
+                        {
+                            await SendMessageAsync(Messages.InvalidID);
+                            await SendMessageAsync(Messages.EnterServerId);
+                            return true;
+                        }
+
                         _serverId = message;
                         await SendServerInfoAsync();
                         return true;
@@ -131,18 +149,42 @@ namespace RustAI
 
                 case Status.WAITING_FOR_SERVER_ID_CONNECT:
                     {
+                        while (!IsIDValid(message))
+                        {
+                            await SendMessageAsync(Messages.InvalidID);
+                            await SendMessageAsync(Messages.EnterServerId);
+                            return true;
+                        }
+
+                        _status = Status.NONE;
                         _serverId = message;
-                        await ConnectToServerAsync();
+
+                        var rustService = new RustService(this, _cancellation);
+                        await rustService.ConnectToServerAsync(_serverId);
                         return true;
                     }
                 case Status.WAITING_FOR_PLAYER_ID:
                     {
+                        while (!IsIDValid(message))
+                        {
+                            await SendMessageAsync(Messages.InvalidID);
+                            await SendMessageAsync(Messages.EnterServerId);
+                            return true;
+                        }
+
                         _playerId = message;
-                        await SendPlayersInfoAsync();
+                        await SendPlayerInfoAsync();
                         return true;
                     }
                 case Status.WAITING_FOR_PLAYER_ID_TRACK:
                     {
+                        while (!IsIDValid(message))
+                        {
+                            await SendMessageAsync(Messages.InvalidID);
+                            await SendMessageAsync(Messages.EnterServerId);
+                            return true;
+                        }
+
                         _playerId = message;
                         await AddTrackedPlayerAsync();
                         return true;
@@ -207,6 +249,22 @@ namespace RustAI
                     await SendMessageAsync(Messages.EnterServerIdentifier);
                     return true;
 
+                case "favorite_server_remove":
+                    var serverName = JSONConfig.FavoriteServers.FirstOrDefault(s => s.Id == _serverId)?.Name;
+
+                    await JSONConfigHandler.RemoveFavoriteServerAsync(_serverId);
+                    await SendMessageAsync(Messages.ServerRemovedFromFavorites(_serverId, serverName));
+                    _keyboardFactory.InitKeyboards();
+                    return true;
+
+                case "favorite_player_remove":
+                    var playerName = JSONConfig.FavoritePlayers.FirstOrDefault(p => p.Id == _playerId)?.Name;
+
+                    await JSONConfigHandler.RemoveFavoritePlayerAsync(_playerId);
+                    await SendMessageAsync(Messages.PlayerRemovedFromFavorites(_playerId, playerName));
+                    _keyboardFactory.InitKeyboards();
+                    return true;
+
                 default:
                     return false;
             }
@@ -221,7 +279,7 @@ namespace RustAI
             {
                 case Constants.PrefixPlayersInfo:
                     _playerId = splittedCallbackData[1];
-                    await SendPlayersInfoAsync();
+                    await SendPlayerInfoAsync();
                     break;
 
                 case Constants.PrefixServersInfo:
@@ -230,8 +288,10 @@ namespace RustAI
                     break;
 
                 case Constants.PrefixConnects:
+                    _status = Status.NONE;
                     _serverId = splittedCallbackData[1];
-                    await ConnectToServerAsync();
+                    var rustService = new RustService(this, _cancellation);
+                    await rustService.ConnectToServerAsync(_serverId);
                     break;
 
                 case Constants.PrefixTracking:
@@ -243,265 +303,25 @@ namespace RustAI
                     _playerId = splittedCallbackData[1];
                     await RemoveTrackedPlayerAsync();
                     break;
+
+                case Constants.PrefixConnectNow:
+                    _serverId = splittedCallbackData[1];
+                    var rustServiceNow = new RustService(this, _cancellation);
+                    Task.Run(() => rustServiceNow.ConnectRightNowAsync(_serverId));
+                    break;
+
+                case Constants.PrefixConnectQueue:
+                    _serverId = splittedCallbackData[1];
+                    var rustServiceQueue = new RustService(this, _cancellation);
+                    await rustServiceQueue.ConnectAfterQueueAsync(_serverId);
+                    break;
+
+                case Constants.PrefixConnectTimer:
+                    _serverId = splittedCallbackData[1];
+                    var rustServiceTimer = new RustService(this, _cancellation);
+                    await rustServiceTimer.ConnectAfterTimerAsync(_serverId);
+                    break;
             }
-        }
-
-        private async Task AddTrackedPlayerAsync()
-        {
-            if (JSONConfig.TrackedPlayers.Count >= Constants.MaxTrackedPlayers)
-            {
-                await SendMessageAsync(Messages.MaxTrackedReached);
-                return;
-            }
-
-            if (await Utils.IsPlayerTrackedAsync(_playerId))
-            {
-                await SendMessageAsync(Messages.PlayerAlreadyTracked(_playerId));
-                return;
-            }
-
-            var json = await PlayerHandler.GetBattlemetricsJson(_playerId, "server");
-            var name = await PlayerHandler.GetName(json);
-            var server = await PlayerHandler.GetCurrentServer(json);
-
-            await JSONConfigHandler.AddTrackedPlayerAsync(_playerId, name, server);
-            _keyboardFactory.InitKeyboards();
-
-            await SendMessageAsync(Messages.PlayerAddedToTrack(name, _playerId));
-
-            if (server == Constants.NotPlaying || server == Constants.NA)
-                await SendMessageAsync(Messages.PlayerNowOffline(name, _playerId));
-            else
-                await SendMessageAsync(Messages.PlayerNowPlaying(name, _playerId, server));
-
-            _status = Status.NONE;
-        }
-
-        private async Task RemoveTrackedPlayerAsync()
-        {
-            if (JSONConfig.TrackedPlayers.Count == 0)
-            {
-                await SendMessageAsync(Messages.NoTrackedPlayers);
-                return;
-            }
-
-            var name = JSONConfig.TrackedPlayers
-                .FirstOrDefault(p => p.StartsWith($"{_playerId} |"))?
-                .Split('|')[1]
-                .Trim() ?? Constants.Unknown;
-
-            await JSONConfigHandler.RemoveTrackedPlayerAsync(_playerId);
-            await SendMessageAsync(Messages.PlayerRemovedFromTracking(name, _playerId));
-        }
-
-        private async Task SendPlayersInfoAsync()
-        {
-            var warningMessage = Utils.BuildPlayerInfoWarningMessage();
-            await SendMessageAsync(warningMessage);
-            await SendMessageAsync(Messages.PreparingData);
-
-            var json = await PlayerHandler.GetBattlemetricsJson(_playerId, "server");
-            if (json is null)
-            {
-                _status = Status.NONE;
-                await SendMessageAsync(Messages.HttpRequestError);
-                return;
-            }
-        
-            var error = await PlayerHandler.RateLimitError(json);
-            if (error.Item1)
-            {
-                await SendMessageAsync("🚫 " + error.Item2);
-                return;
-            }
-
-            if (JSONConfig.GetListOfPlayerServers)
-                await SendListOfServersAsync(json);
-
-            if (JSONConfig.GetListOfPlayerNames)
-                await SendListOfNamesAsync();
-
-            _status = Status.NONE;
-
-            var caption = await PlayerHandler.GetPlayerFullInformation(json);
-
-            if (Utils.IsPlayerAlreadyFavorited(_playerId))
-            {
-                await SendMessageAsync(caption);
-            }
-            else
-            {
-                await _telegramClient.SendMessage(
-                           chatId: JSONConfig.ChatID,
-                           text: caption,
-                           cancellationToken: _cancellation.Token,
-                           replyMarkup: _keyboardFactory.FavoritePlayers);
-            }
-        }
-
-        private async Task SendListOfServersAsync(JsonDocument doc)
-        {
-            var listOfServers = await PlayerHandler.GetListOfPlayedServersAndTime(doc);
-            var fileWatermark = Utils.BuildAuthorFileWatermark();
-
-            var fileName = Utils.BuildPlayerServersFileName(await PlayerHandler.GetName(doc));
-            var path = JSONConfig.PathToExportedPlayersServers + $"\\{fileName}";
-
-            await File.WriteAllTextAsync(path, fileWatermark + listOfServers);
-            await using var stream = File.OpenRead(path);
-            var inputFile = InputFile.FromStream(stream);
-
-            await _telegramClient.SendDocument
-                (chatId: JSONConfig.ChatID,
-                cancellationToken: _cancellation.Token,
-                caption: Messages.PlayerServers(await PlayerHandler.GetName(doc)),
-                document: inputFile);
-        }
-
-        private async Task SendListOfNamesAsync()
-        {
-            var newJson = await PlayerHandler.GetBattlemetricsJson(_playerId, "identifier");
-            var listOfNames = await PlayerHandler.GetListOfNames(newJson);
-            var fileWatermark = Utils.BuildAuthorFileWatermark();
-
-            var fileName = Utils.BuildPlayerNamesFileName(await PlayerHandler.GetName(newJson));
-            var path = JSONConfig.PathToExportedPlayersNames + $"\\{fileName}";
-
-            await File.WriteAllTextAsync(path, fileWatermark + listOfNames);
-            await using var stream = File.OpenRead(path);
-            var inputFile = InputFile.FromStream(stream);
-
-            await _telegramClient.SendDocument
-                (chatId: JSONConfig.ChatID,
-                cancellationToken: _cancellation.Token,
-                caption: Messages.PlayerHistoryNames(await PlayerHandler.GetName(newJson)),
-                document: inputFile);
-        }
-
-        private async Task SendServerInfoAsync()
-        {
-            var warningMessage = Utils.BuildServerfInfoWarningMessage();
-            await SendMessageAsync(warningMessage);
-            await SendMessageAsync(Messages.PreparingData);
-
-            var json = await ServerHandler.GetJson(_serverId);
-            if (json is null)
-            {
-                _status = Status.NONE;
-                await SendMessageAsync(Messages.HttpRequestError);
-                return;
-            }
-
-            var error = await ServerHandler.RateLimitError(json);
-            if (error.Item1)
-            {
-                await SendMessageAsync("🚫 " + error.Item2);
-                return;
-            }
-
-            _status = Status.NONE;
-
-            var mapUrl = await ServerHandler.GetMapUrl(json);
-            var caption = await ServerHandler.GetServerFullInformation(json);
-            var description = await ServerHandler.GetDescription(json);
-
-            if (description != Constants.NA)
-                await SendMessageAsync(description);
-
-            bool isFavorited = Utils.IsServerAlreadyFavorited(_serverId);
-            bool mapSent = false;
-
-            try
-            {
-                await _telegramClient.SendPhoto(
-                    chatId: JSONConfig.ChatID,
-                    photo: mapUrl,
-                    caption: caption,
-                    replyMarkup: isFavorited ? null : _keyboardFactory.FavoriteServers,
-                    cancellationToken: _cancellation.Token);
-
-                mapSent = true;
-            }
-            catch { }
-
-            if (!mapSent)
-            {
-                await SendMessageAsync(Messages.MapNotFound);
-
-                await _telegramClient.SendMessage(
-                    chatId: JSONConfig.ChatID,
-                    text: caption,
-                    replyMarkup: isFavorited ? null : _keyboardFactory.FavoriteServers,
-                    cancellationToken: _cancellation.Token);
-            }
-        }
-
-        private async Task ConnectToServerAsync()
-        {
-            var json = await ServerHandler.GetJson(_serverId);
-            var warningMessage = await Utils.BuildConnectWarningMessageAsync(json);
-
-            await SendMessageAsync(warningMessage);
-            await Task.Delay(Constants.ShortDelayMs);
-
-            var connectToInsert = $"{Constants.ClientConnectCommandPrefix}{await ServerHandler.GetAddress(json)}";
-
-            if (ConnectHandler.IsProcessRunning(Constants.RustProcessName))
-            {
-                if (!ConnectHandler.CheckActiveWindow(Constants.RustWindowName))
-                {
-                    await SendMessageAsync(Messages.SwappingToRust);
-                    ConnectHandler.SwapWindow(Constants.RustProcessName);
-                }
-            }
-            else
-            {
-                await SendMessageAsync(Messages.RustNotLaunched);
-                await LaunchRustAsync();
-                await Task.Delay((int)TimeSpan.FromSeconds(JSONConfig.RustLaunchDelaySeconds).TotalMilliseconds);
-            }
-
-            var simulator = new InputSimulator();
-            simulator.Keyboard.KeyPress(VirtualKeyCode.F1);
-
-            await Task.Delay(Constants.ShortDelayMs);
-
-            foreach (char c in connectToInsert)
-                simulator.Keyboard.TextEntry(c);
-
-            simulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
-
-            await SendMessageAsync(Messages.Connecting);
-            _status = Status.NONE;
-        }
-
-        private async Task LaunchRustAsync()
-        {
-            if (ConnectHandler.IsProcessRunning(Constants.RustProcessName))
-                await SendMessageAsync(Messages.RustAlreadyRunning);
-
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = Utils.GetSteamPath(),
-                UseShellExecute = true
-            };
-
-            Process.Start(psi);
-
-            await SendMessageAsync(Messages.RustLaunching);
-        }
-
-        private async Task QuitRustAsync()
-        {
-            var processes = Process.GetProcessesByName(Constants.RustProcessName);
-
-            foreach (var process in processes)
-            {
-                process.Kill();
-                process.WaitForExit();
-            }
-
-            await SendMessageAsync(Messages.RustQuitting);
         }
 
         private async Task HandleUserMessageAsync(string message)
@@ -509,7 +329,7 @@ namespace RustAI
             switch (message)
             {
                 case "/about":
-                    await SendMessageAsync(Utils.BuildAboutMessage());
+                    await SendMessageAsync(Builders.BuildAboutMessage());
                     break;
 
                 case "/servers":
@@ -521,7 +341,6 @@ namespace RustAI
                         text: Messages.ServerData,
                         cancellationToken: _cancellation.Token,
                         replyMarkup: _keyboardFactory.Servers);
-
                         break;
                     }
                 case "/connect":
@@ -548,7 +367,7 @@ namespace RustAI
 
                         break;
                     }
-                case "/trackadd":
+                case "/track_add":
                     {
                         _status = Status.WAITING_FOR_PLAYER_ID_TRACK;
 
@@ -561,7 +380,7 @@ namespace RustAI
                         break;
                     }
 
-                case "/trackremove":
+                case "/track_remove":
                     await SendTrackListAsync();
 
                     if (JSONConfig.TrackedPlayers.Count == 0)
@@ -574,29 +393,237 @@ namespace RustAI
                   replyMarkup: _keyboardFactory.TrackingRemove);
 
                     break;
-
-                case "/tracklist":
+                //To do disconnect (not pasting idk why)
+                //Create tracking class
+                //Не работают другие команды когда какая то в процессе
+                //Баг с командами.
+                case "/track_list":
                     await SendTrackListAsync();
                     break;
 
-                case "/trackclear":
+                case "/track_clear":
+                    await ClearTrackedPlayersAsync();
+                    break;
 
-                    foreach (var tp in JSONConfig.TrackedPlayers.ToList())
-                    {
-                        var playerId = tp.Split('|')[0].Trim();
-                        await JSONConfigHandler.RemoveTrackedPlayerAsync(playerId);
-                    }
-
-                    await SendMessageAsync(Messages.AllTrackedRemoved);
+                case "/disconnect":
+                    var rustLauncherDisconnect = new RustService(this, _cancellation);
+                    await rustLauncherDisconnect.DisconnectAsync();
                     break;
 
                 case "/quit":
-                    await QuitRustAsync();
+                    var rustLauncherQuit = new RustService(this, _cancellation);
+                    await rustLauncherQuit.QuitRustAsync();
                     break;
 
                 case "/launch":
-                    await LaunchRustAsync();
+                    var rustLauncherLaunch = new RustService(this, _cancellation);
+                    await rustLauncherLaunch.LaunchRustAsync();
                     break;
+
+                case "/connection_status":
+                    await GetConnectionStatus();
+                    break;
+            }
+        }
+
+        private async Task AddTrackedPlayerAsync()
+        {
+            if (JSONConfig.TrackedPlayers.Count >= Constants.MaxTrackedPlayers)
+            {
+                await SendMessageAsync(Messages.MaxTrackedReached);
+                return;
+            }
+
+            var existedPlayer = JSONConfig.TrackedPlayers.FirstOrDefault(p => p.Id == _playerId);
+
+            if (await JSONConfigHandler.IsPlayerTrackedAsync(existedPlayer))
+            {
+                await SendMessageAsync(Messages.PlayerAlreadyTracked(_playerId));
+                return;
+            }
+
+            var json = await PlayerHandler.GetJson(_playerId, "server");
+            var trackedPlayer = new TrackedPlayer
+            {
+                Id = _playerId,
+                Name = await PlayerHandler.GetName(json),
+                CurrentServer = await PlayerHandler.GetCurrentServer(json)
+            };
+
+            await JSONConfigHandler.AddTrackedPlayerAsync(trackedPlayer);
+            _keyboardFactory.InitKeyboards();
+
+            await SendMessageAsync(Messages.PlayerAddedToTrack(trackedPlayer.Name, trackedPlayer.Id));
+
+            if (trackedPlayer.CurrentServer == Constants.NotPlaying || trackedPlayer.CurrentServer == Constants.NA)
+                await SendMessageAsync(Messages.PlayerNowOffline(trackedPlayer.Name, trackedPlayer.Id));
+            else
+                await SendMessageAsync(Messages.PlayerNowPlaying(trackedPlayer.Name, trackedPlayer.Id, trackedPlayer.CurrentServer));
+
+            _status = Status.NONE;
+        }
+
+        private async Task RemoveTrackedPlayerAsync()
+        {
+            if (JSONConfig.TrackedPlayers.Count == 0)
+            {
+                await SendMessageAsync(Messages.NoTrackedPlayers);
+                return;
+            }
+
+            var player = JSONConfig.TrackedPlayers.FirstOrDefault(p => p.Id == _playerId);
+
+            await JSONConfigHandler.RemoveTrackedPlayerAsync(player);
+            await SendMessageAsync(Messages.PlayerRemovedFromTracking(player.Name, player.Id));
+        }
+
+        private async Task ClearTrackedPlayersAsync()
+        {
+            foreach (var tp in JSONConfig.TrackedPlayers)
+                await JSONConfigHandler.RemoveTrackedPlayerAsync(tp);
+
+            await SendMessageAsync(Messages.AllTrackedRemoved);
+        }
+
+        private async Task GetConnectionStatus()
+        {
+            await SendScreenshotAsync(Messages.ConnectionStatus);
+        }
+
+        private async Task SendPlayerInfoAsync()
+        {
+            var warningMessage = Builders.BuildPlayerWarningMessage();
+            await SendMessageAsync(warningMessage);
+
+            var json = await PlayerHandler.GetJson(_playerId, "server");
+            if (json is null)
+            {
+                _status = Status.NONE;
+                await SendMessageAsync(Messages.HttpRequestError);
+                return;
+            }
+
+            var error = await PlayerHandler.RateLimitError(json);
+            if (error.Item1)
+            {
+                await SendMessageAsync("🚫 " + error.Item2);
+                return;
+            }
+
+            if (JSONConfig.GetListOfPlayerServers)
+                await SendServersListAsync(json);
+
+            if (JSONConfig.GetListOfPlayerNames)
+                await SendNamesListAsync();
+
+            _status = Status.NONE;
+
+            var caption = await PlayerHandler.GetPlayerFullInformation(json);
+            var isFavorited = JSONConfigHandler.IsPlayerAlreadyFavorited(_playerId);
+
+            await _telegramClient.SendMessage(
+                       chatId: JSONConfig.ChatID,
+                       text: caption,
+                       cancellationToken: _cancellation.Token,
+                       parseMode: ParseMode.Html,
+                       replyMarkup: isFavorited ? _keyboardFactory.FavoritePlayerRemove : _keyboardFactory.FavoritePlayerAdd);
+        }
+
+        private async Task SendServersListAsync(JsonDocument doc)
+        {
+            var listOfServers = await PlayerHandler.GetListOfPlayedServersAndTime(doc);
+            var fileWatermark = Builders.BuildAuthorFileWatermark();
+
+            var fileName = Builders.BuildPlayerServersFileName(await PlayerHandler.GetName(doc));
+            var path = Builders.BuildPlayerServersFilePath(fileName);
+
+            await File.WriteAllTextAsync(path, fileWatermark + listOfServers);
+            await using var stream = File.OpenRead(path);
+            var inputFile = InputFile.FromStream(stream);
+
+            await _telegramClient.SendDocument
+                (chatId: JSONConfig.ChatID,
+                cancellationToken: _cancellation.Token,
+                caption: Messages.PlayerServers(await PlayerHandler.GetName(doc)),
+                document: inputFile);
+        }
+
+        private async Task SendNamesListAsync()
+        {
+            var newJson = await PlayerHandler.GetJson(_playerId, "identifier");
+            var listOfNames = await PlayerHandler.GetListOfNames(newJson);
+            var fileWatermark = Builders.BuildAuthorFileWatermark();
+
+            var fileName = Builders.BuildPlayerNamesFileName(await PlayerHandler.GetName(newJson));
+            var path = Builders.BuildPlayerNamesFilePath(fileName);
+
+            await File.WriteAllTextAsync(path, fileWatermark + listOfNames);
+            await using var stream = File.OpenRead(path);
+            var inputFile = InputFile.FromStream(stream);
+
+            await _telegramClient.SendDocument
+                (chatId: JSONConfig.ChatID,
+                cancellationToken: _cancellation.Token,
+                caption: Messages.PlayerHistoryNames(await PlayerHandler.GetName(newJson)),
+                document: inputFile);
+        }
+
+        private async Task SendServerInfoAsync()
+        {
+            var warningMessage = Builders.BuildServerWarningMessage();
+            await SendMessageAsync(warningMessage);
+
+            var json = await ServerHandler.GetJson(_serverId);
+            if (json is null)
+            {
+                _status = Status.NONE;
+                await SendMessageAsync(Messages.HttpRequestError);
+                return;
+            }
+
+            var error = await ServerHandler.RateLimitError(json);
+            if (error.Item1)
+            {
+                await SendMessageAsync("🚫 " + error.Item2);
+                return;
+            }
+
+            _status = Status.NONE;
+
+            var mapUrl = await ServerHandler.GetMapUrl(json);
+            var caption = await ServerHandler.GetServerFullInformation(json);
+            var description = await ServerHandler.GetDescription(json);
+
+            if (description != Constants.NA)
+                await SendMessageAsync(description);
+
+            bool isFavorited = JSONConfigHandler.IsServerAlreadyFavorited(_serverId);
+            bool mapSent = false;
+
+            try
+            {
+                await _telegramClient.SendPhoto(
+                    chatId: JSONConfig.ChatID,
+                    photo: mapUrl,
+                    caption: caption,
+                    parseMode: ParseMode.Html,
+                    replyMarkup: isFavorited ? _keyboardFactory.FavoriteServerRemove : _keyboardFactory.FavoriteServerAdd,
+                    cancellationToken: _cancellation.Token);
+
+                mapSent = true;
+            }
+            catch { }
+
+            if (!mapSent)
+            {
+                await SendMessageAsync(Messages.MapNotFound);
+
+                await _telegramClient.SendMessage(
+                    chatId: JSONConfig.ChatID,
+                    text: caption,
+                    parseMode: ParseMode.Html,
+                    replyMarkup: isFavorited ? _keyboardFactory.FavoriteServerRemove : _keyboardFactory.FavoriteServerAdd,
+                    cancellationToken: _cancellation.Token);
             }
         }
 
@@ -611,66 +638,66 @@ namespace RustAI
             var trackedList = Messages.TrackedPlayers;
 
             foreach (var player in JSONConfig.TrackedPlayers)
-            {
-                var playerId = player.Split('|')[0].Trim();
-                var name = player.Split('|')[1].Trim();
-                var server = player.Split('|')[2].Trim();
-
-                trackedList += $"• \"{name}\" ({playerId}) - {server}\n";
-            }
+                trackedList += $"• \"{player.Name}\" ({player.Id}) - {player.CurrentServer}\n";
 
             await SendMessageAsync(trackedList);
         }
 
-        private async Task MonitorTrackedPlayersAsync()
+        public async Task SendScreenshotAsync(string caption = "")
         {
-            while (!_cancellation.IsCancellationRequested)
+            var width = SystemUtils.GetSystemMetrics(SystemUtils.SM_CXSCREEN);
+            var height = SystemUtils.GetSystemMetrics(SystemUtils.SM_CYSCREEN);
+
+            using (Bitmap bmp = new Bitmap(width, height))
             {
-                if (JSONConfig.TrackedPlayers.Count == 0)
-                {
-                    await Task.Delay(Constants.ShortDelayMs, _cancellation.Token);
-                    continue;
-                }
+                using Graphics g = Graphics.FromImage(bmp);
+                g.CopyFromScreen(0, 0, 0, 0, bmp.Size);
 
-                var tasks = JSONConfig.TrackedPlayers.Select(async player =>
-                {
-                    var playerId = player.Split('|')[0].Trim();
-                    var name = player.Split('|')[1].Trim();
-                    var oldServer = player.Split('|')[2].Trim();
+                var currentScreenshotPath = Builders.BuildScreenshotsFilePath(Builders.BuildScreenshotFileName());
+                bmp.Save(currentScreenshotPath, ImageFormat.Png);
 
-                    var json = await PlayerHandler.GetBattlemetricsJson(playerId, "server");
-                    var currentServer = await PlayerHandler.GetCurrentServer(json);
-
-                    if (currentServer != oldServer)
-                    {
-                        if (currentServer == Constants.NotPlaying || currentServer == Constants.NA)
-                            await SendMessageAsync(Messages.PlayerLoggedOff(name, playerId));
-                        else
-                            await SendMessageAsync(Messages.PlayerConnected(name, playerId, currentServer));
-
-                        await JSONConfigHandler.UpdateTrackedPlayerAsync(playerId, name, currentServer);
-                    }
-                });
-
-                await Task.WhenAll(tasks);
-                await Task.Delay(Constants.TrackCheckIntervalMs, _cancellation.Token);
+                await SendImageAsync(
+                    imagePath: currentScreenshotPath,
+                    caption: caption);
             }
         }
 
-        private async Task SendMessageAsync(string message)
+        public async Task SendMessageAsync(string message, InlineKeyboardMarkup keyboard = null)
         {
-            if (JSONConfig.ChatID != default)
+            try
             {
+                await _telegramClient.SendMessage(
+                    chatId: JSONConfig.ChatID,
+                    text: message,
+                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
+                    replyMarkup: keyboard,
+                    cancellationToken: _cancellation.Token);
+            }
+            catch { }
+        }
+
+        private async Task SendImageAsync(string imagePath, string caption)
+        {
+            if (File.Exists(imagePath))
+            {
+                await using var stream = File.OpenRead(imagePath);
+                var inputFile = InputFile.FromStream(stream);
+
                 try
                 {
-                    await _telegramClient.SendMessage(
+                    await _telegramClient.SendDocument(
                         chatId: JSONConfig.ChatID,
-                        text: message,
-                        cancellationToken: _cancellation.Token
-                        );
+                        caption: caption,
+                        document: inputFile,
+                        cancellationToken: _cancellation.Token);
                 }
-                catch (Exception) { }
+                catch { }
             }
+        }
+
+        private bool IsIDValid(string id)
+        {
+            return long.TryParse(id, out _);
         }
     }
 }

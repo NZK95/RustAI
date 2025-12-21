@@ -18,11 +18,12 @@ namespace RustAI
             InitializeComponent();
             InitializeAssets();
             this.Loaded += MainWindow_Loaded;
+            this.Closed += MainWindow_Closed;
+        }
 
-            System.Windows.MessageBox.Show(
-                "RustAI is running in the background." +
-                " You can access it from the system tray icon.",
-                "", MessageBoxButton.OK, MessageBoxImage.Information);
+        private async void MainWindow_Closed(object sender, EventArgs e)
+        {
+            await TelegramBot.ShutdownAsync();
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -52,7 +53,7 @@ namespace RustAI
                 {
                     try
                     {
-                        Process.Start(new ProcessStartInfo(Utils.GetRustAIProjectLink())
+                        Process.Start(new ProcessStartInfo(Builders.BuildRustAIProjectLink())
                         {
                             UseShellExecute = true
                         });
@@ -77,7 +78,7 @@ namespace RustAI
             }
             catch (Exception ex)
             {
-               System.Windows.MessageBox.Show($"Error: {ex.Message}");
+                System.Windows.MessageBox.Show($"Error: {ex.Message}");
             }
         }
 

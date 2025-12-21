@@ -1,12 +1,17 @@
-﻿
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace RustAI
 {
-    internal static class ConnectHandler
+    internal static class SystemUtils
     {
+        [DllImport("user32.dll")]
+        public static extern bool LockWorkStation();
+
+        [DllImport("user32.dll")]
+        public static extern int GetSystemMetrics(int nIndex);
+        
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -22,20 +27,27 @@ namespace RustAI
         [DllImport("user32.dll")]
         static extern bool AllowSetForegroundWindow(int dwProcessId);
 
-        const int SW_RESTORE = 9;
+        public const int SW_RESTORE = 9;
+        public const int SM_CXSCREEN = 0;
+        public const int SM_CYSCREEN = 1;
 
         public static bool CheckActiveWindow(string name)
+        {
+           return GetActiveWindow() == name;
+        }
+
+        public static string GetActiveWindow()
         {
             IntPtr handle = GetForegroundWindow();
             StringBuilder sb = new StringBuilder(256);
 
             if (GetWindowText(handle, sb, sb.Capacity) > 0)
-                return sb.ToString() == name;
+                return sb.ToString();
 
-            return false;
+            return Constants.NA;
         }
 
-        public static void SwapWindow(string processName)
+        public static void SwapActiveWindow(string processName)
         {
             var proc = Process.GetProcessesByName(processName).FirstOrDefault();
             if (proc == null)
