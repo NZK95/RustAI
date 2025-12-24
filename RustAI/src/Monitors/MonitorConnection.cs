@@ -4,20 +4,18 @@
     {
         private readonly TelegramBot _bot;
         private readonly CancellationTokenSource _cancellation;
-        private readonly string _serverID;
 
-        public MonitorConnection(TelegramBot bot, string serverID, CancellationTokenSource cancellation)
+        public MonitorConnection(TelegramBot bot, CancellationTokenSource cancellation)
         {
             _bot = bot;
-            _serverID = serverID;
             _cancellation = cancellation;
         }
 
-        public async Task MonitorConnectionAsync()
+        public async Task MonitorConnectionAsync(string serverID)
         {
             while (!_cancellation.IsCancellationRequested)
             {
-                var json = await ServerHandler.GetJson(_serverID, "session");
+                var json = await ServerHandler.GetJson(serverID, "session");
                 var players = ServerHandler.GetPlayers(json);
                 var isUserEntered = PlayerHandler.IsUserEntered(players, JSONConfig.BattlemetricsID);
 

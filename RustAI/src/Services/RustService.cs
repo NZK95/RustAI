@@ -96,8 +96,8 @@ namespace RustAI
             await PasteToConsole(connectToInsert);
             await _bot.SendMessageAsync(Messages.Connecting);
 
-            var monitorConnection = new MonitorConnection(_bot, serverID, _cancellation);
-            _ = monitorConnection.MonitorConnectionAsync();
+            var monitorConnection = new MonitorConnection(_bot, _cancellation);
+            _ = monitorConnection.MonitorConnectionAsync(serverID);
         }
 
         public async Task ConnectAfterQueueAsync(string serverID)
