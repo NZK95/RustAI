@@ -9,6 +9,7 @@
         public const int ConsoleDelayMs = 100;
         public const int ShortDelayMs = 1000;
         public const int TrackCheckIntervalMs = 30000;
+        public const int QueueCheckIntervalMs = 7000;
         public static int RustLaunchDelayMs = (int)TimeSpan.FromSeconds(JSONConfig.RustLaunchDelaySeconds).TotalMilliseconds;
         public static int ConnectTimerDelayMs = (int)TimeSpan.FromMinutes(JSONConfig.ConnectTimerMinutes).TotalMilliseconds;
 
@@ -21,6 +22,7 @@
         // Server/player offline markers
         public const string NotPlaying = "Not playing";
         public const string NA = "N/A";
+        public const string NONE = "none";
         public const string Unknown = "Unknown";
 
         // Callback prefixes
@@ -36,6 +38,6 @@
 
         // Commands
         public const string ClientConnectCommandPrefix = "client.connect ";
-        public const string ClientDisconnectCommand = "disconnect";
+        public const string ClientDisconnectCommand = "client.disconnect";
     }
 }

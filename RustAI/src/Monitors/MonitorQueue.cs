@@ -13,7 +13,7 @@
 
         public async Task MonitorQueueAsync(string serverID)
         {
-            while (true)
+            while (!_cancellation.IsCancellationRequested)
             {
                 var json = await ServerHandler.GetJson(serverID);
                 var queueCount = await ServerHandler.GetQueuedPlayers(json);
@@ -22,9 +22,11 @@
                 {
                     await _bot.SendMessageAsync(Messages.QueueAlarm);
                     var rustService = new RustService(_bot, _cancellation);
-                    Task.Run(() => rustService.ConnectRightNowAsync(serverID));
+                    await rustService.ConnectRightNowAsync(serverID);
                     break;
                 }
+
+                await Task.Delay(Constants.QueueCheckIntervalMs, _cancellation.Token);
             }
         }
 

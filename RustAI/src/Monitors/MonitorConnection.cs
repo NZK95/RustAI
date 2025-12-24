@@ -29,10 +29,10 @@
 
                 if (isUserEntered)
                 {
-                    await _bot.SendMessageAsync(Messages.ConnectedToServer);
-
                     if (JSONConfig.SendScreenshotWhenJoined)
-                        await _bot.SendScreenshotAsync();
+                        await _bot.GetConnectionStatus(Messages.ConnectedToServer);
+                    else
+                        await _bot.SendMessageAsync(Messages.ConnectedToServer);
 
                     break;
                 }

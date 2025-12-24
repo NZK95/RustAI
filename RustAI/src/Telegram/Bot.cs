@@ -1,20 +1,16 @@
-﻿using System.Diagnostics;
-using System.Drawing.Imaging;
+﻿using System.Drawing.Imaging;
 using System.IO;
 using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using WindowsInput;
-using WindowsInput.Native;
 
 namespace RustAI
 {
     public class TelegramBot
     {
         private Status _status;
-        private int? _queueCount;
         private string _serverId;
         private string _playerId;
         private TelegramBotClient _telegramClient;
@@ -32,18 +28,19 @@ namespace RustAI
 
             _commands = new[]
             {
-                    new BotCommand(command: "about", description: "Show author and project information."),
-                    new BotCommand(command: "players", description: "Show player information."),
-                    new BotCommand(command: "servers", description: "Show server information."),
-                    new BotCommand(command: "launch", description: "Launch rust."),
-                    new BotCommand(command: "quit", description: "Quit rust."),
-                    new BotCommand(command: "connect", description: "Connect to server."),
-                    new BotCommand(command: "connection_status", description: "Show connection status in screenshot format."),
-                    new BotCommand(command: "disconnect", description: "Disconnect from the server."),
-                    new BotCommand(command: "track_add", description: "Add player to track list."),
-                    new BotCommand(command: "track_remove", description: "Remove player from track list."),
-                    new BotCommand(command: "track_list", description: "Show track list."),
-                    new BotCommand(command: "track_clear", description: "Clear track list."),
+                    new BotCommand(command: "about", description: "Show author and project information"),
+                    new BotCommand(command: "settings", description: "Show and change config.json settings"),
+                    new BotCommand(command: "players", description: "Show player information"),
+                    new BotCommand(command: "servers", description: "Show server information"),
+                    new BotCommand(command: "launch", description: "Launch rust"),
+                    new BotCommand(command: "quit", description: "Quit rust"),
+                    new BotCommand(command: "connect", description: "Connect to selected server. Launches Rust if necessary and switches active window to Rust"),
+                    new BotCommand(command: "status", description: "Show connection status in screenshot format. Switches active window to Rust if necessary"),
+                    new BotCommand(command: "disconnect", description: "Disconnect from the server"),
+                    new BotCommand(command: "add", description: "Add player to track list"),
+                    new BotCommand(command: "remove", description: "Remove player from track list"),
+                    new BotCommand(command: "list", description: "Show track list"),
+                    new BotCommand(command: "clear", description: "Clear track list")
             };
 
             var monitorPlayers = new MonitorTrackedPlayers(this, _cancellation);
@@ -135,7 +132,7 @@ namespace RustAI
             {
                 case Status.WAITING_FOR_SERVER_ID_INFO:
                     {
-                        while (!IsIDValid(message))
+                        while (!Validators.IsIDValid(message))
                         {
                             await SendMessageAsync(Messages.InvalidID);
                             await SendMessageAsync(Messages.EnterServerId);
@@ -149,7 +146,7 @@ namespace RustAI
 
                 case Status.WAITING_FOR_SERVER_ID_CONNECT:
                     {
-                        while (!IsIDValid(message))
+                        while (!Validators.IsIDValid(message))
                         {
                             await SendMessageAsync(Messages.InvalidID);
                             await SendMessageAsync(Messages.EnterServerId);
@@ -165,10 +162,10 @@ namespace RustAI
                     }
                 case Status.WAITING_FOR_PLAYER_ID:
                     {
-                        while (!IsIDValid(message))
+                        while (!Validators.IsIDValid(message))
                         {
                             await SendMessageAsync(Messages.InvalidID);
-                            await SendMessageAsync(Messages.EnterServerId);
+                            await SendMessageAsync(Messages.EnterPlayerId);
                             return true;
                         }
 
@@ -178,10 +175,10 @@ namespace RustAI
                     }
                 case Status.WAITING_FOR_PLAYER_ID_TRACK:
                     {
-                        while (!IsIDValid(message))
+                        while (!Validators.IsIDValid(message))
                         {
                             await SendMessageAsync(Messages.InvalidID);
-                            await SendMessageAsync(Messages.EnterServerId);
+                            await SendMessageAsync(Messages.EnterPlayerId);
                             return true;
                         }
 
@@ -191,18 +188,26 @@ namespace RustAI
                     }
                 case Status.FAVORITE_PLAYER:
                     {
-                        _status = Status.NONE;
+                        if (message.ToLower() == Constants.NONE)
+                            message = await PlayerHandler.GetName(await PlayerHandler.GetJson(_playerId));
+
                         await JSONConfigHandler.AddFavoritePlayerAsync(_playerId, message);
                         await SendMessageAsync(Messages.PlayerAddedToFavorites(message, _playerId));
+
                         _keyboardFactory.InitKeyboards();
+                        _status = Status.NONE;
                         return true;
                     }
                 case Status.FAVORITE_SERVER:
                     {
-                        _status = Status.NONE;
+                        if (message.ToLower() == Constants.NONE)
+                            message = await ServerHandler.GetName(await ServerHandler.GetJson(_serverId));
+
                         await JSONConfigHandler.AddFavoriteServerAsync(_serverId, message);
                         await SendMessageAsync(Messages.ServerAddedToFavorites(message, _serverId));
+
                         _keyboardFactory.InitKeyboards();
+                        _status = Status.NONE;
                         return true;
                     }
 
@@ -307,7 +312,7 @@ namespace RustAI
                 case Constants.PrefixConnectNow:
                     _serverId = splittedCallbackData[1];
                     var rustServiceNow = new RustService(this, _cancellation);
-                    Task.Run(() => rustServiceNow.ConnectRightNowAsync(_serverId));
+                    await rustServiceNow.ConnectRightNowAsync(_serverId);
                     break;
 
                 case Constants.PrefixConnectQueue:
@@ -319,7 +324,7 @@ namespace RustAI
                 case Constants.PrefixConnectTimer:
                     _serverId = splittedCallbackData[1];
                     var rustServiceTimer = new RustService(this, _cancellation);
-                    await rustServiceTimer.ConnectAfterTimerAsync(_serverId);
+                    _ = rustServiceTimer.ConnectAfterTimerAsync(_serverId);
                     break;
             }
         }
@@ -328,10 +333,6 @@ namespace RustAI
         {
             switch (message)
             {
-                case "/about":
-                    await SendMessageAsync(Builders.BuildAboutMessage());
-                    break;
-
                 case "/servers":
                     {
                         _status = Status.WAITING_FOR_SERVER_ID_INFO;
@@ -367,7 +368,7 @@ namespace RustAI
 
                         break;
                     }
-                case "/track_add":
+                case "/add":
                     {
                         _status = Status.WAITING_FOR_PLAYER_ID_TRACK;
 
@@ -380,28 +381,30 @@ namespace RustAI
                         break;
                     }
 
-                case "/track_remove":
-                    await SendTrackListAsync();
+                case "/remove":
+                    {
+                        await SendTrackListAsync();
 
-                    if (JSONConfig.TrackedPlayers.Count == 0)
+                        if (JSONConfig.TrackedPlayers.Count == 0)
+                            break;
+
+                        await _telegramClient.SendMessage(
+                      chatId: JSONConfig.ChatID,
+                      text: Messages.RemoveFromTracking,
+                      cancellationToken: _cancellation.Token,
+                      replyMarkup: _keyboardFactory.TrackingRemove);
+
                         break;
+                    }
 
-                    await _telegramClient.SendMessage(
-                  chatId: JSONConfig.ChatID,
-                  text: Messages.RemoveFromTracking,
-                  cancellationToken: _cancellation.Token,
-                  replyMarkup: _keyboardFactory.TrackingRemove);
-
+                case "/config":
                     break;
-                //To do disconnect (not pasting idk why)
-                //Create tracking class
-                //Не работают другие команды когда какая то в процессе
-                //Баг с командами.
-                case "/track_list":
+
+                case "/list":
                     await SendTrackListAsync();
                     break;
 
-                case "/track_clear":
+                case "/clear":
                     await ClearTrackedPlayersAsync();
                     break;
 
@@ -420,8 +423,12 @@ namespace RustAI
                     await rustLauncherLaunch.LaunchRustAsync();
                     break;
 
-                case "/connection_status":
+                case "/status":
                     await GetConnectionStatus();
+                    break;
+
+                case "/about":
+                    await SendMessageAsync(Builders.BuildAboutMessage());
                     break;
             }
         }
@@ -485,20 +492,27 @@ namespace RustAI
             await SendMessageAsync(Messages.AllTrackedRemoved);
         }
 
-        private async Task GetConnectionStatus()
+        public async Task GetConnectionStatus(string message = Messages.ConnectionStatus)
         {
-            await SendScreenshotAsync(Messages.ConnectionStatus);
+            if (!SystemUtils.CheckActiveWindow(Constants.RustWindowName))
+            {
+                SystemUtils.SwapActiveWindow(Constants.RustProcessName);
+                await Task.Delay(Constants.ShortDelayMs);
+            }
+
+            await SendScreenshotAsync(message);
         }
 
         private async Task SendPlayerInfoAsync()
         {
+            _status = Status.NONE;
+
             var warningMessage = Builders.BuildPlayerWarningMessage();
             await SendMessageAsync(warningMessage);
 
             var json = await PlayerHandler.GetJson(_playerId, "server");
             if (json is null)
             {
-                _status = Status.NONE;
                 await SendMessageAsync(Messages.HttpRequestError);
                 return;
             }
@@ -516,17 +530,10 @@ namespace RustAI
             if (JSONConfig.GetListOfPlayerNames)
                 await SendNamesListAsync();
 
-            _status = Status.NONE;
-
             var caption = await PlayerHandler.GetPlayerFullInformation(json);
             var isFavorited = JSONConfigHandler.IsPlayerAlreadyFavorited(_playerId);
 
-            await _telegramClient.SendMessage(
-                       chatId: JSONConfig.ChatID,
-                       text: caption,
-                       cancellationToken: _cancellation.Token,
-                       parseMode: ParseMode.Html,
-                       replyMarkup: isFavorited ? _keyboardFactory.FavoritePlayerRemove : _keyboardFactory.FavoritePlayerAdd);
+            await SendMessageAsync(caption, isFavorited ? _keyboardFactory.FavoritePlayerRemove : _keyboardFactory.FavoritePlayerAdd);
         }
 
         private async Task SendServersListAsync(JsonDocument doc)
@@ -541,8 +548,8 @@ namespace RustAI
             await using var stream = File.OpenRead(path);
             var inputFile = InputFile.FromStream(stream);
 
-            await _telegramClient.SendDocument
-                (chatId: JSONConfig.ChatID,
+            await _telegramClient.SendDocument(
+                chatId: JSONConfig.ChatID,
                 cancellationToken: _cancellation.Token,
                 caption: Messages.PlayerServers(await PlayerHandler.GetName(doc)),
                 document: inputFile);
@@ -561,8 +568,8 @@ namespace RustAI
             await using var stream = File.OpenRead(path);
             var inputFile = InputFile.FromStream(stream);
 
-            await _telegramClient.SendDocument
-                (chatId: JSONConfig.ChatID,
+            await _telegramClient.SendDocument(
+                chatId: JSONConfig.ChatID,
                 cancellationToken: _cancellation.Token,
                 caption: Messages.PlayerHistoryNames(await PlayerHandler.GetName(newJson)),
                 document: inputFile);
@@ -570,13 +577,14 @@ namespace RustAI
 
         private async Task SendServerInfoAsync()
         {
+            _status = Status.NONE;
+
             var warningMessage = Builders.BuildServerWarningMessage();
             await SendMessageAsync(warningMessage);
 
             var json = await ServerHandler.GetJson(_serverId);
             if (json is null)
             {
-                _status = Status.NONE;
                 await SendMessageAsync(Messages.HttpRequestError);
                 return;
             }
@@ -588,17 +596,15 @@ namespace RustAI
                 return;
             }
 
-            _status = Status.NONE;
-
             var mapUrl = await ServerHandler.GetMapUrl(json);
             var caption = await ServerHandler.GetServerFullInformation(json);
             var description = await ServerHandler.GetDescription(json);
 
-            if (description != Constants.NA)
+            if (description != Constants.NA && JSONConfig.GetServerDescription)
                 await SendMessageAsync(description);
 
-            bool isFavorited = JSONConfigHandler.IsServerAlreadyFavorited(_serverId);
-            bool mapSent = false;
+            var isFavorited = JSONConfigHandler.IsServerAlreadyFavorited(_serverId);
+            var mapSent = false;
 
             try
             {
@@ -615,16 +621,7 @@ namespace RustAI
             catch { }
 
             if (!mapSent)
-            {
-                await SendMessageAsync(Messages.MapNotFound);
-
-                await _telegramClient.SendMessage(
-                    chatId: JSONConfig.ChatID,
-                    text: caption,
-                    parseMode: ParseMode.Html,
-                    replyMarkup: isFavorited ? _keyboardFactory.FavoriteServerRemove : _keyboardFactory.FavoriteServerAdd,
-                    cancellationToken: _cancellation.Token);
-            }
+                await SendMessageAsync(caption, isFavorited ? _keyboardFactory.FavoriteServerRemove : _keyboardFactory.FavoriteServerAdd);
         }
 
         private async Task SendTrackListAsync()
@@ -645,10 +642,9 @@ namespace RustAI
 
         public async Task SendScreenshotAsync(string caption = "")
         {
-            var width = SystemUtils.GetSystemMetrics(SystemUtils.SM_CXSCREEN);
-            var height = SystemUtils.GetSystemMetrics(SystemUtils.SM_CYSCREEN);
+            var resolution = SystemUtils.GetScreenResolution();
 
-            using (Bitmap bmp = new Bitmap(width, height))
+            using (Bitmap bmp = new Bitmap(width: resolution.width, height: resolution.height))
             {
                 using Graphics g = Graphics.FromImage(bmp);
                 g.CopyFromScreen(0, 0, 0, 0, bmp.Size);
@@ -669,7 +665,7 @@ namespace RustAI
                 await _telegramClient.SendMessage(
                     chatId: JSONConfig.ChatID,
                     text: message,
-                    parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
+                    parseMode: ParseMode.Html,
                     replyMarkup: keyboard,
                     cancellationToken: _cancellation.Token);
             }
@@ -693,11 +689,6 @@ namespace RustAI
                 }
                 catch { }
             }
-        }
-
-        private bool IsIDValid(string id)
-        {
-            return long.TryParse(id, out _);
         }
     }
 }

@@ -32,6 +32,16 @@ namespace RustAI
             FavoritePlayerRemove = BuildRemovePlayerFromFavorites();
         }
 
+        public static InlineKeyboardMarkup BuildConnectKeyboard(string serverID)
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Right now", $"{Constants.PrefixConnectNow}@{serverID}"),
+                InlineKeyboardButton.WithCallbackData("When queue reaches a number",$"{Constants.PrefixConnectQueue}@{serverID}" ),
+                InlineKeyboardButton.WithCallbackData("After a timer", $"{Constants.PrefixConnectTimer}@{serverID}")
+            });
+        }
+
         private InlineKeyboardMarkup BuildServers()
         {
             var rows = new List<InlineKeyboardButton[]>();

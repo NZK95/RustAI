@@ -9,11 +9,13 @@ namespace RustAI
     {
         private readonly TelegramBot _bot;
         private readonly CancellationTokenSource _cancellation;
+        private readonly InputSimulator _inputSimulator = new InputSimulator();
 
         public RustService(TelegramBot bot, CancellationTokenSource cancellation)
         {
             _bot = bot;
             _cancellation = cancellation;
+            _inputSimulator = new InputSimulator();
         }
 
         public async Task LaunchRustAsync()
@@ -24,14 +26,14 @@ namespace RustAI
                 return;
             }
 
-            ProcessStartInfo psi = new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = Constants.GamePath,
                 UseShellExecute = true
             };
 
-            Process.Start(psi);
             await _bot.SendMessageAsync(Messages.RustLaunching);
+            Process.Start(psi);
         }
 
         public async Task QuitRustAsync()
@@ -61,8 +63,7 @@ namespace RustAI
 
             if (!SystemUtils.IsProcessRunning(Constants.RustProcessName))
             {
-                var rustLauncher = new RustService(bot: _bot, cancellation: _cancellation);
-                await rustLauncher.LaunchRustAsync();
+                await LaunchRustAsync();
                 await Task.Delay(Constants.RustLaunchDelayMs);
             }
 
@@ -72,27 +73,19 @@ namespace RustAI
                 return;
             }
 
-            var keyboard = new InlineKeyboardMarkup(new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Right now", $"{Constants.PrefixConnectNow}@{serverID}"),
-                InlineKeyboardButton.WithCallbackData("When queue reaches a number",$"{Constants.PrefixConnectQueue}@{serverID}" ),
-                InlineKeyboardButton.WithCallbackData("After a timer", $"{Constants.PrefixConnectTimer}@{serverID}")
-            });
-
             var name = await ServerHandler.GetName(serverJson);
             var playersCount = await ServerHandler.GetPlayersCount(serverJson);
             var queue = await ServerHandler.GetQueuedPlayers(serverJson);
+            var message = Messages.Connect(name, playersCount, queue);
+            var keyboard = KeyboardFactory.BuildConnectKeyboard(serverID);
 
-            await _bot.SendMessageAsync(Messages.Connect(name, playersCount, queue), keyboard);
+            await _bot.SendMessageAsync(message, keyboard);
         }
 
         public async Task ConnectRightNowAsync(string serverID)
         {
             var json = await ServerHandler.GetJson(serverID);
             var connectToInsert = $"{Constants.ClientConnectCommandPrefix}{await ServerHandler.GetAddress(json)}";
-            var message = await Builders.BuildConnectWarningMessageAsync(json);
-
-            await _bot.SendMessageAsync(message);
 
             if (!SystemUtils.CheckActiveWindow(Constants.RustWindowName))
             {
@@ -104,21 +97,21 @@ namespace RustAI
             await _bot.SendMessageAsync(Messages.Connecting);
 
             var monitorConnection = new MonitorConnection(_bot, serverID, _cancellation);
-            Task.Run(() => monitorConnection.MonitorConnectionAsync());
+            _ = monitorConnection.MonitorConnectionAsync();
         }
 
         public async Task ConnectAfterQueueAsync(string serverID)
         {
             await _bot.SendMessageAsync(Messages.ConnectAfterQueue());
             var monitorQueue = new MonitorQueue(_bot, _cancellation);
-            Task.Run(() => monitorQueue.MonitorQueueAsync(serverID));
+            _ = monitorQueue.MonitorQueueAsync(serverID);
         }
 
         public async Task ConnectAfterTimerAsync(string serverID)
         {
             await _bot.SendMessageAsync(Messages.ConnectAfterTimer());
             await Task.Delay(Constants.ConnectTimerDelayMs);
-            Task.Run(() => ConnectRightNowAsync(serverID));
+            await ConnectRightNowAsync(serverID);
         }
 
         public async Task DisconnectAsync()
@@ -151,17 +144,16 @@ namespace RustAI
 
         private async Task PasteToConsole(string connectToInsert)
         {
-            var simulator = new InputSimulator();
-            simulator.Keyboard.KeyPress(VirtualKeyCode.F1);
+            _inputSimulator.Keyboard.KeyPress(VirtualKeyCode.F1);
 
             await Task.Delay(Constants.ConsoleDelayMs);
 
             foreach (char c in connectToInsert)
-                simulator.Keyboard.TextEntry(c);
+                _inputSimulator.Keyboard.TextEntry(c);
 
 
-            simulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
-            simulator.Keyboard.KeyPress(VirtualKeyCode.F1);
+            _inputSimulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
+            _inputSimulator.Keyboard.KeyPress(VirtualKeyCode.F1);
         }
     }
 }

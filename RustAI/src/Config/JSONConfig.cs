@@ -20,6 +20,7 @@ namespace RustAI
         public static List<FavoritePlayer> FavoritePlayers { get; set; }
         public static List<TrackedPlayer> TrackedPlayers { get; set; }
         public static bool GetListOfPlayerNames { get; set; }
+        public static bool GetServerDescription { get; set; }
         public static bool GetListOfPlayerServers { get; set; }
         public static bool SendScreenshotWhenJoined { get; set; }
 
@@ -52,6 +53,7 @@ namespace RustAI
             FavoritePlayers = deserializedBot.FavoritePlayers;
             GetListOfPlayerNames = deserializedBot.GetListOfPlayerNames;
             GetListOfPlayerServers = deserializedBot.GetListOfPlayerServers;
+            GetServerDescription = deserializedBot.GetServerDescription;
             RustLaunchDelaySeconds = deserializedBot.RustLaunchDelaySeconds;
             BattlemetricsID = deserializedBot.BattlemetricsID;
             SendScreenshotWhenJoined = deserializedBot.SendScreenshotWhenJoined;

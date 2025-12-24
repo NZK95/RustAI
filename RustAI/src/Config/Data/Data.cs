@@ -35,6 +35,9 @@ namespace RustAI
         [JsonPropertyName("GetPlayerServersHistory")]
         public bool GetListOfPlayerServers { get; set; }
 
+        [JsonPropertyName("GetServerDescription")]
+        public bool GetServerDescription { get; set; }
+
         [JsonPropertyName("SendScreenshotWhenJoined")]
         public bool SendScreenshotWhenJoined { get; set; }
     }
