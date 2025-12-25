@@ -112,8 +112,20 @@ namespace RustAI
                 InlineKeyboardButton.WithCallbackData(screnenshotWhenJoined, Constants.PrefixUpdateSWJ)
             });
 
-                rows.Add(new[]
-                {
+            rows.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData($"Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds} sec", Constants.PrefixBackSettings),
+                InlineKeyboardButton.WithCallbackData($"Queue Limit: {JSONConfig.QueueLimit}", Constants.PrefixBackSettings)
+            });
+
+            rows.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData($"Connect Timer: {JSONConfig.ConnectTimerMinutes} min", Constants.PrefixBackSettings),
+                InlineKeyboardButton.WithCallbackData($"User ID: {JSONConfig.BattlemetricsID}", Constants.PrefixBackSettings)
+            });
+
+            rows.Add(new[]
+            {
                 InlineKeyboardButton.WithCallbackData("⬅️ Back", Constants.PrefixBackSettings)
             });
 

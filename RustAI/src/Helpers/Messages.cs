@@ -44,21 +44,11 @@ namespace RustAI
 
         public static async Task<string> BuildSettingsCaption()
         {
-            var json = await PlayerHandler.GetJson(JSONConfig.BattlemetricsID);
-            var name = await PlayerHandler.GetName(json);
-
             return $@"⚙️ <b>Settings RustAI</b>
 
-                   👤 <b>Player Info</b>
-                   ├ Name: {name}
-                   └ ID: {JSONConfig.BattlemetricsID}
+Here you can change various program settings that are stored in the <b>config.json</b> file, which you can also edit directly in the file.
 
-                   ⚡ <b>Connection Settings</b>
-                   ├ Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds}s
-                   ├ Queue Limit: {(JSONConfig.QueueLimit == 0 ? "None" : JSONConfig.QueueLimit.ToString())}
-                   └ Connect Timer: {JSONConfig.ConnectTimerMinutes} min
-
-                    <i>Use buttons below to modify settings</i>";
+<i>Use buttons below to modify settings</i>";
         }
 
         public static string ServerOnline(string name) =>
