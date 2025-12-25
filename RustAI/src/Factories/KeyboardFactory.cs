@@ -89,13 +89,32 @@ namespace RustAI
             return new InlineKeyboardMarkup(rows);
         }
 
-        private static InlineKeyboardMarkup BuildSettings()
+        public static InlineKeyboardMarkup BuildSettings(bool backButton = true)
         {
             var rows = new List<InlineKeyboardButton[]>();
 
+            var playerNames = $"{Formatters.GetEmoji(JSONConfig.GetListOfPlayerNames)} Player Names History";
+            var playerServers = $"{Formatters.GetEmoji(JSONConfig.GetListOfPlayerServers)} Player Servers History";
+
             rows.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData("🔙 Back to Main Menu", Constants.PrefixBackSettings)
+                InlineKeyboardButton.WithCallbackData(playerNames, Constants.PrefixUpdatePNH),
+                InlineKeyboardButton.WithCallbackData(playerServers, Constants.PrefixUpdatePSH)
+            });
+
+
+            var serverDescription = $"{Formatters.GetEmoji(JSONConfig.GetServerDescription)} Server Description";
+            var screnenshotWhenJoined = $"{Formatters.GetEmoji(JSONConfig.SendScreenshotWhenJoined)} Screenshot When Joined";
+
+            rows.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData(serverDescription, Constants.PrefixUpdateGSD),
+                InlineKeyboardButton.WithCallbackData(screnenshotWhenJoined, Constants.PrefixUpdateSWJ)
+            });
+
+                rows.Add(new[]
+                {
+                InlineKeyboardButton.WithCallbackData("⬅️ Back", Constants.PrefixBackSettings)
             });
 
             return new InlineKeyboardMarkup(rows);

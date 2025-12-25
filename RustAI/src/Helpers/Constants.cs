@@ -30,7 +30,7 @@ server management and player tracking so you never miss a moment.
 📊 Advanced Analytics
 ⚙️ Smart Notifications
 
-🌐 {Builders.BuildRustAIProjectLink()}";
+⚠️ If you encounter bugs or unexpected behavior, please report them here {Builders.BuildRustAIProjectLink()}/issues";
 
         public const string NotPlaying = "Not playing";
         public const string NA = "N/A";
@@ -60,6 +60,10 @@ server management and player tracking so you never miss a moment.
         public const string PrefixClear = "Start-Clear";
         public const string PrefixSettings = "Start-Settings";
         public const string PrefixBackSettings = "Settings-Back";
+        public const string PrefixUpdatePNH = "Settings-UpdatePNH";
+        public const string PrefixUpdateGSD = "Settings-UpdateGSD";
+        public const string PrefixUpdatePSH = "Settings-UpdatePSH";
+        public const string PrefixUpdateSWJ = "Settings-UpdateSWJ";
 
         public const string ClientConnectCommandPrefix = "client.connect ";
         public const string ClientDisconnectCommand = "client.disconnect";

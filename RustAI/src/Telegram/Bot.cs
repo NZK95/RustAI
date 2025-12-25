@@ -32,15 +32,15 @@ namespace RustAI
 
             _commands = new[]
             {
-                    new BotCommand(command: "settings", description: "Show and change config.json settings"),
+                    new BotCommand(command: "start", description: "Show RustAI main menu"),
                     new BotCommand(command: "players", description: "Show player information"),
                     new BotCommand(command: "servers", description: "Show server information"),
-                    new BotCommand(command: "launch", description: "Launch rust"),
-                    new BotCommand(command: "quit", description: "Quit rust"),
-                    new BotCommand(command: "autoconnect", description: "Autoconnect to selected server when it is online. Use it when the server is turned off"),
                     new BotCommand(command: "connect", description: "Connect to selected server. Launches Rust if necessary and switches active window to Rust"),
+                    new BotCommand(command: "autoconnect", description: "Autoconnect to selected server when it is online. Use it when the server is turned off"),
                     new BotCommand(command: "status", description: "Show connection status in screenshot format. Switches active window to Rust if necessary"),
                     new BotCommand(command: "disconnect", description: "Disconnect from the server"),
+                    new BotCommand(command: "launch", description: "Launch rust"),
+                    new BotCommand(command: "quit", description: "Quit rust"),
                     new BotCommand(command: "add", description: "Add player to track list"),
                     new BotCommand(command: "remove", description: "Remove player from track list"),
                     new BotCommand(command: "list", description: "Show track list"),
@@ -78,6 +78,7 @@ namespace RustAI
             var me = _telegramClient.GetMe();
 
             await SendMessageAsync(Messages.ProgramRunning);
+            await HandleUserMessageAsync("/start");
         }
 
         public async Task ShutdownAsync()
@@ -412,7 +413,7 @@ namespace RustAI
                         parseMode: ParseMode.Html,
                         caption: await Messages.BuildSettingsCaption(),
                         messageId: cq.Message.Id,
-                        replyMarkup: _keyboardFactory.Settings,
+                        replyMarkup: KeyboardFactory.BuildSettings(),
                         cancellationToken: _cancellation.Token);
 
                     break;
@@ -426,6 +427,50 @@ namespace RustAI
                         messageId: cq.Message.Id,
                         cancellationToken: _cancellation.Token);
 
+                    break;
+
+                case Constants.PrefixUpdatePNH:
+                    JSONConfig.GetListOfPlayerNames = !JSONConfig.GetListOfPlayerNames;
+                    await JSONConfigHandler.UpdateConfig();
+
+                    await _telegramClient.EditMessageReplyMarkup(
+                      chatId: JSONConfig.ChatID,
+                      replyMarkup: KeyboardFactory.BuildSettings(),
+                      messageId: cq.Message.Id,
+                      cancellationToken: _cancellation.Token);
+                    break;
+
+                case Constants.PrefixUpdateGSD:
+                    JSONConfig.GetServerDescription = !JSONConfig.GetServerDescription;
+                    await JSONConfigHandler.UpdateConfig();
+
+                    await _telegramClient.EditMessageReplyMarkup(
+                      chatId: JSONConfig.ChatID,
+                      replyMarkup: KeyboardFactory.BuildSettings(),
+                      messageId: cq.Message.Id,
+                      cancellationToken: _cancellation.Token);
+                    break;
+
+                case Constants.PrefixUpdatePSH:
+                    JSONConfig.GetListOfPlayerServers = !JSONConfig.GetListOfPlayerServers;
+                    await JSONConfigHandler.UpdateConfig();
+
+                    await _telegramClient.EditMessageReplyMarkup(
+                      chatId: JSONConfig.ChatID,
+                      replyMarkup: KeyboardFactory.BuildSettings(),
+                      messageId: cq.Message.Id,
+                      cancellationToken: _cancellation.Token);
+                    break;
+
+                case Constants.PrefixUpdateSWJ:
+                    JSONConfig.SendScreenshotWhenJoined = !JSONConfig.SendScreenshotWhenJoined;
+                    await JSONConfigHandler.UpdateConfig();
+
+                    await _telegramClient.EditMessageReplyMarkup(
+                      chatId: JSONConfig.ChatID,
+                      replyMarkup: KeyboardFactory.BuildSettings(),
+                      messageId: cq.Message.Id,
+                      cancellationToken: _cancellation.Token);
                     break;
             }
         }
@@ -476,9 +521,6 @@ namespace RustAI
                 case "/autoconnect":
                     _status = Status.WAITING_FOR_SERVER_ID_AUTOCONNECT;
                     await SendMessageAsync(Messages.ConnectToServer, _keyboardFactory.AutoConnects);
-                    break;
-
-                case "/settings":
                     break;
 
                 case "/list":
@@ -566,7 +608,7 @@ namespace RustAI
             if (JSONConfig.TrackedPlayers.Count <= 0)
             {
                 await SendMessageAsync(Messages.NoTrackedPlayers);
-                    return;
+                return;
             }
 
             foreach (var tp in JSONConfig.TrackedPlayers)
@@ -577,6 +619,12 @@ namespace RustAI
 
         public async Task GetConnectionStatus(string message = Messages.ConnectionStatus)
         {
+            if (!SystemUtils.IsProcessRunning(Constants.RustProcessName))
+            {
+                await SendMessageAsync(Messages.RustNotLaunched);
+                return;
+            }
+
             if (!SystemUtils.CheckActiveWindow(Constants.RustWindowName))
             {
                 SystemUtils.SwapActiveWindow(Constants.RustProcessName);

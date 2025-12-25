@@ -53,25 +53,12 @@ namespace RustAI
                    ├ Name: {name}
                    └ ID: {JSONConfig.BattlemetricsID}
 
-                   📊 <b>Tracking Settings</b>
-                   ├ Player Names History: {GetCheckmark(JSONConfig.GetListOfPlayerNames)}
-                   ├ Player Servers History: {GetCheckmark(JSONConfig.GetListOfPlayerServers)}
-                   └ Server Description: {GetCheckmark(JSONConfig.GetServerDescription)}
-
-                   📸 <b>Notifications</b>
-                   └ Screenshot on Join: {GetCheckmark(JSONConfig.SendScreenshotWhenJoined)}
-
                    ⚡ <b>Connection Settings</b>
                    ├ Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds}s
                    ├ Queue Limit: {(JSONConfig.QueueLimit == 0 ? "None" : JSONConfig.QueueLimit.ToString())}
                    └ Connect Timer: {JSONConfig.ConnectTimerMinutes} min
 
                     <i>Use buttons below to modify settings</i>";
-        }
-
-        public static string GetCheckmark(bool value)
-        {
-            return value ? "✅ Enabled" : "❌ Disabled";
         }
 
         public static string ServerOnline(string name) =>

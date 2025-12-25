@@ -35,7 +35,7 @@ namespace RustAI
             DeserializeData();
         }
 
-        private static void DeserializeData()
+        public static void DeserializeData()
         {
             using var fs = new FileStream(PathToConfig, FileMode.Open, FileAccess.Read);
 
