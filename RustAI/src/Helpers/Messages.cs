@@ -42,6 +42,9 @@ namespace RustAI
         public const string Track = "Select a player to track";
         public const string RemoveFromTracking = "Select a player to remove";
 
+        public static string ServerOnline(string name) =>
+            $"Server {name} is now online. Connecting...";
+
         public static string Connect(string name, int playersCount, int queueCount) =>
             $"You selected \"{name}\"\n" +
             $"There are currently {playersCount} players on the server, and {queueCount} in queue\n" +

@@ -6,6 +6,7 @@ namespace RustAI
     {
         public InlineKeyboardMarkup Servers { get; private set; }
         public InlineKeyboardMarkup Connects { get; private set; }
+        public InlineKeyboardMarkup AutoConnects { get; private set; }
         public InlineKeyboardMarkup Players { get; private set; }
         public InlineKeyboardMarkup Tracking { get; private set; }
         public InlineKeyboardMarkup TrackingRemove { get; private set; }
@@ -30,6 +31,7 @@ namespace RustAI
             FavoriteServerAdd = BuildFavoriteServer();
             FavoriteServerRemove = BuildRemoveServerFromFavorites();
             FavoritePlayerRemove = BuildRemovePlayerFromFavorites();
+            AutoConnects = BuildAutoConnects();
         }
 
         public static InlineKeyboardMarkup BuildConnectKeyboard(string serverID)
@@ -47,7 +49,7 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var server in JSONConfig.FavoriteServers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, callbackData: $"ServersInfo@{server.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, callbackData: $"{Constants.PrefixServersInfo}@{server.Id}") });
 
             rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your server id", "user_server_id") });
             return new InlineKeyboardMarkup(rows);
@@ -58,7 +60,18 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var server in JSONConfig.FavoriteServers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, $"Connects@{server.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, $"@{Constants.PrefixConnects}{server.Id}") });
+
+            rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your server id", "user_server_id") });
+            return new InlineKeyboardMarkup(rows);
+        }
+
+        private InlineKeyboardMarkup BuildAutoConnects()
+        {
+            var rows = new List<InlineKeyboardButton[]>();
+
+            foreach (var server in JSONConfig.FavoriteServers)
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, $"{Constants.PrefixAutoConnects}@{server.Id}") });
 
             rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your server id", "user_server_id") });
             return new InlineKeyboardMarkup(rows);
@@ -69,7 +82,7 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var player in JSONConfig.FavoritePlayers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"PlayersInfo@{player.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"{Constants.PrefixPlayersInfo}@{player.Id}") });
 
             rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your player id", "user_player_id") });
             return new InlineKeyboardMarkup(rows);
@@ -80,7 +93,7 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var player in JSONConfig.FavoritePlayers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"Tracking@{player.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"{Constants.PrefixTracking}@{player.Id}") });
 
             rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your player id", "user_player_id") });
             return new InlineKeyboardMarkup(rows);
@@ -91,7 +104,7 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var player in JSONConfig.TrackedPlayers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"TrackingRemove@{player.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(player.Name, $"{Constants.PrefixTrackingRemove}@{player.Id}") });
 
             return new InlineKeyboardMarkup(rows);
         }

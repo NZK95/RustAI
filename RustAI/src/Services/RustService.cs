@@ -87,6 +87,12 @@ namespace RustAI
             var json = await ServerHandler.GetJson(serverID);
             var connectToInsert = $"{Constants.ClientConnectCommandPrefix}{await ServerHandler.GetAddress(json)}";
 
+            if(!SystemUtils.IsProcessRunning(Constants.RustProcessName))
+            {
+                await _bot.SendMessageAsync(Messages.RustNotLaunched);
+                return;
+            }
+
             if (!SystemUtils.CheckActiveWindow(Constants.RustWindowName))
             {
                 SystemUtils.SwapActiveWindow(Constants.RustProcessName);

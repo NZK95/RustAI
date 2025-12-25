@@ -18,11 +18,15 @@ namespace RustAI
         private KeyboardFactory _keyboardFactory;
         private readonly BotCommand[] _commands;
         private readonly string _botName;
+        private readonly string _shortDescription;
+        private readonly string _startMessage;
 
         public TelegramBot()
         {
-            _botName = Constants.ProjectName;
             _status = Status.NONE;
+            _botName = Constants.ProjectName;
+            _shortDescription = Constants.ProjectShortDescription;
+            _startMessage = Constants.ProjectStartMessage;
             _cancellation = new CancellationTokenSource();
             _keyboardFactory = new KeyboardFactory();
 
@@ -34,6 +38,7 @@ namespace RustAI
                     new BotCommand(command: "servers", description: "Show server information"),
                     new BotCommand(command: "launch", description: "Launch rust"),
                     new BotCommand(command: "quit", description: "Quit rust"),
+                    new BotCommand(command: "autoconnect", description: "Autoconnect to selected server when it is online. Use it when the server is turned off"),
                     new BotCommand(command: "connect", description: "Connect to selected server. Launches Rust if necessary and switches active window to Rust"),
                     new BotCommand(command: "status", description: "Show connection status in screenshot format. Switches active window to Rust if necessary"),
                     new BotCommand(command: "disconnect", description: "Disconnect from the server"),
@@ -60,11 +65,15 @@ namespace RustAI
 
             var currentCommands = await _telegramClient.GetMyCommands();
             var currentName = await _telegramClient.GetMyName();
+            var shortDescription = await _telegramClient.GetMyShortDescription();
 
-            if (!CommandsAreEqual(currentCommands, _commands) || currentName.Name != _botName)
+            if (!CommandsAreEqual(currentCommands, _commands) ||
+                currentName.Name != _botName ||
+                shortDescription != _shortDescription)
             {
                 await _telegramClient.SetMyCommands(_commands);
                 await _telegramClient.SetMyName(_botName);
+                await _telegramClient.SetMyShortDescription(_shortDescription);
             }
 
             var me = _telegramClient.GetMe();
@@ -186,6 +195,22 @@ namespace RustAI
                         await AddTrackedPlayerAsync();
                         return true;
                     }
+
+                case Status.WAITING_FOR_SERVER_ID_AUTOCONNECT:
+                    {
+                        while (!Validators.IsIDValid(message))
+                        {
+                            await SendMessageAsync(Messages.InvalidID);
+                            await SendMessageAsync(Messages.EnterServerId);
+                            return true;
+                        }
+
+                        _serverId = message;
+                        var monitorStatus = new MonitorServerStatus(this, _cancellation);
+                        _ = monitorStatus.MonitorServerStatusAsync(_serverId);
+                        return true;
+                    }
+
                 case Status.FAVORITE_PLAYER:
                     {
                         if (message.ToLower() == Constants.NONE)
@@ -299,6 +324,13 @@ namespace RustAI
                     await rustService.ConnectToServerAsync(_serverId);
                     break;
 
+                case Constants.PrefixAutoConnects:
+                    _status = Status.NONE;
+                    _serverId = splittedCallbackData[1];
+                    var monitorStatus = new MonitorServerStatus(this, _cancellation);
+                    _ = monitorStatus.MonitorServerStatusAsync(_serverId);
+                    break;
+
                 case Constants.PrefixTracking:
                     _playerId = splittedCallbackData[1];
                     await AddTrackedPlayerAsync();
@@ -333,69 +365,43 @@ namespace RustAI
         {
             switch (message)
             {
+                case "/start":
+                    await SendMessageAsync(_startMessage);
+                    break; 
+
                 case "/servers":
-                    {
-                        _status = Status.WAITING_FOR_SERVER_ID_INFO;
+                    _status = Status.WAITING_FOR_SERVER_ID_INFO;
+                    await SendMessageAsync(Messages.ServerData, _keyboardFactory.Servers);
+                    break;
 
-                        await _telegramClient.SendMessage(
-                        chatId: JSONConfig.ChatID,
-                        text: Messages.ServerData,
-                        cancellationToken: _cancellation.Token,
-                        replyMarkup: _keyboardFactory.Servers);
-                        break;
-                    }
                 case "/connect":
-                    {
-                        _status = Status.WAITING_FOR_SERVER_ID_CONNECT;
+                    _status = Status.WAITING_FOR_SERVER_ID_CONNECT;
+                    await SendMessageAsync(Messages.ConnectToServer, _keyboardFactory.Connects);
+                    break;
 
-                        await _telegramClient.SendMessage(
-                       chatId: JSONConfig.ChatID,
-                       text: Messages.ConnectToServer,
-                       cancellationToken: _cancellation.Token,
-                       replyMarkup: _keyboardFactory.Connects);
-
-                        break;
-                    }
                 case "/players":
-                    {
-                        _status = Status.WAITING_FOR_PLAYER_ID;
+                    _status = Status.WAITING_FOR_PLAYER_ID;
+                    await SendMessageAsync(Messages.PlayerData, _keyboardFactory.Players);
+                    break;
 
-                        await _telegramClient.SendMessage(
-                        chatId: JSONConfig.ChatID,
-                        text: Messages.PlayerData,
-                        cancellationToken: _cancellation.Token,
-                        replyMarkup: _keyboardFactory.Players);
-
-                        break;
-                    }
                 case "/add":
-                    {
-                        _status = Status.WAITING_FOR_PLAYER_ID_TRACK;
-
-                        await _telegramClient.SendMessage(
-                      chatId: JSONConfig.ChatID,
-                      text: Messages.Track,
-                      cancellationToken: _cancellation.Token,
-                      replyMarkup: _keyboardFactory.Tracking);
-
-                        break;
-                    }
+                    _status = Status.WAITING_FOR_PLAYER_ID_TRACK;
+                    await SendMessageAsync(Messages.Track, _keyboardFactory.Tracking);
+                    break;
 
                 case "/remove":
-                    {
-                        await SendTrackListAsync();
+                    await SendTrackListAsync();
 
-                        if (JSONConfig.TrackedPlayers.Count == 0)
-                            break;
-
-                        await _telegramClient.SendMessage(
-                      chatId: JSONConfig.ChatID,
-                      text: Messages.RemoveFromTracking,
-                      cancellationToken: _cancellation.Token,
-                      replyMarkup: _keyboardFactory.TrackingRemove);
-
+                    if (JSONConfig.TrackedPlayers.Count == 0)
                         break;
-                    }
+
+                    await SendMessageAsync(Messages.RemoveFromTracking, _keyboardFactory.TrackingRemove);
+                    break;
+
+                case "/autoconnect":
+                    _status = Status.WAITING_FOR_SERVER_ID_AUTOCONNECT;
+                    await SendMessageAsync(Messages.ConnectToServer, _keyboardFactory.AutoConnects);
+                    break;
 
                 case "/config":
                     break;
@@ -684,6 +690,7 @@ namespace RustAI
                     await _telegramClient.SendDocument(
                         chatId: JSONConfig.ChatID,
                         caption: caption,
+                        parseMode: ParseMode.Html,
                         document: inputFile,
                         cancellationToken: _cancellation.Token);
                 }
