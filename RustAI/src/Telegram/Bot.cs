@@ -5,6 +5,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace RustAI
 {
@@ -366,7 +367,12 @@ namespace RustAI
             switch (message)
             {
                 case "/start":
-                    await SendMessageAsync(_startMessage);
+                    await _telegramClient.SendPhoto(
+                       chatId: JSONConfig.ChatID,
+                       photo: InputFile.FromUri(Constants.ProjectLogo),
+                       caption: _startMessage,
+                       parseMode: ParseMode.Html,
+                       cancellationToken: _cancellation.Token);
                     break; 
 
                 case "/servers":

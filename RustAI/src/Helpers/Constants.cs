@@ -16,11 +16,12 @@
         public const string GamePath = "steam://rungameid/252490";
 
         public const string ProjectName = "RustAI";
+        public const string ProjectLogo = "https://raw.githubusercontent.com/NZK95/RustAI/master/RustAI/assets/images/logo.png";
         public static readonly string ProjectShortDescription = $"RustAI Bot - your personal Rust assistant\n{Builders.BuildRustAIProjectLink()}";
-        public const string ProjectStartMessage = @"What can this bot do?
+        public static readonly string ProjectStartMessage = $@"What can this bot do?
 
 🤖 Manage Rust smartly.
-RustAI Bot is your ultimate Rust companion — built for real-time 
+**RustAI Bot** is your ultimate Rust companion — built for real-time 
 server management and player tracking so you never miss a moment.
 
 ⚡ Real-Time Server Monitoring
@@ -29,8 +30,7 @@ server management and player tracking so you never miss a moment.
 📊 Advanced Analytics
 ⚙️ Smart Notifications
 
-🌐 GitHub: www.yourwebsite.com
-📖 Docs: docs.yoursite.io";
+🌐 GitHub: {Builders.BuildRustAIProjectLink()}";
 
         public const string NotPlaying = "Not playing";
         public const string NA = "N/A";
