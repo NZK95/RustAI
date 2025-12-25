@@ -14,6 +14,8 @@ namespace RustAI
         public InlineKeyboardMarkup FavoriteServerAdd { get; private set; }
         public InlineKeyboardMarkup FavoriteServerRemove { get; private set; }
         public InlineKeyboardMarkup FavoritePlayerRemove { get; private set; }
+        public InlineKeyboardMarkup Start { get; private set; }
+        public InlineKeyboardMarkup Settings { get; private set; }
 
         public KeyboardFactory()
         {
@@ -32,9 +34,11 @@ namespace RustAI
             FavoriteServerRemove = BuildRemoveServerFromFavorites();
             FavoritePlayerRemove = BuildRemovePlayerFromFavorites();
             AutoConnects = BuildAutoConnects();
+            Start = BuildStart();
+            Settings = BuildSettings();
         }
 
-        public static InlineKeyboardMarkup BuildConnectKeyboard(string serverID)
+        public static InlineKeyboardMarkup BuildConnect(string serverID)
         {
             return new InlineKeyboardMarkup(new[]
             {
@@ -42,6 +46,59 @@ namespace RustAI
                 InlineKeyboardButton.WithCallbackData("When queue reaches a number",$"{Constants.PrefixConnectQueue}@{serverID}" ),
                 InlineKeyboardButton.WithCallbackData("After a timer", $"{Constants.PrefixConnectTimer}@{serverID}")
             });
+        }
+
+        private static InlineKeyboardMarkup BuildStart()
+        {
+            var rows = new List<InlineKeyboardButton[]>();
+
+            rows.Add(new[]
+            {
+            InlineKeyboardButton.WithCallbackData("👥 Players", Constants.PrefixPlayers),
+            InlineKeyboardButton.WithCallbackData("🌐 Servers", Constants.PrefixServers)
+            });
+
+            rows.Add(new[]
+            {
+        InlineKeyboardButton.WithCallbackData("🚀 Launch", Constants.PrefixLaunch),
+        InlineKeyboardButton.WithCallbackData("🛑 Quit", Constants.PrefixQuit)
+            });
+
+            rows.Add(new[]
+            {
+        InlineKeyboardButton.WithCallbackData("🔗 Connect", Constants.PrefixConnect),
+        InlineKeyboardButton.WithCallbackData("⚡ AutoConnect", Constants.PrefixAutoConnect),
+        InlineKeyboardButton.WithCallbackData("🔌 Disconnect", Constants.PrefixDisconnect),
+        InlineKeyboardButton.WithCallbackData("📊 Status", Constants.PrefixStatus)
+         });
+
+            rows.Add(new[]
+            {
+        InlineKeyboardButton.WithCallbackData("➕ Add", Constants.PrefixAdd),
+        InlineKeyboardButton.WithCallbackData("➖ Remove", Constants.PrefixRemove),
+        InlineKeyboardButton.WithCallbackData("📋 List", Constants.PrefixList),
+        InlineKeyboardButton.WithCallbackData("🗑️ Clear", Constants.PrefixClear)
+            });
+
+            rows.Add(new[]
+            {
+        InlineKeyboardButton.WithCallbackData("⚙️ Settings", Constants.PrefixSettings),
+        InlineKeyboardButton.WithUrl("💻 GitHub", Builders.BuildRustAIProjectLink())
+            });
+
+            return new InlineKeyboardMarkup(rows);
+        }
+
+        private static InlineKeyboardMarkup BuildSettings()
+        {
+            var rows = new List<InlineKeyboardButton[]>();
+
+            rows.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData("🔙 Back to Main Menu", Constants.PrefixBackSettings)
+            });
+
+            return new InlineKeyboardMarkup(rows);
         }
 
         private InlineKeyboardMarkup BuildServers()

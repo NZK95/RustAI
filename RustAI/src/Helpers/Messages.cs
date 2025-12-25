@@ -42,8 +42,40 @@ namespace RustAI
         public const string Track = "Select a player to track";
         public const string RemoveFromTracking = "Select a player to remove";
 
+        public static async Task<string> BuildSettingsCaption()
+        {
+            var json = await PlayerHandler.GetJson(JSONConfig.BattlemetricsID);
+            var name = await PlayerHandler.GetName(json);
+
+            return $@"⚙️ <b>Settings RustAI</b>
+
+                   👤 <b>Player Info</b>
+                   ├ Name: {name}
+                   └ ID: {JSONConfig.BattlemetricsID}
+
+                   📊 <b>Tracking Settings</b>
+                   ├ Player Names History: {GetCheckmark(JSONConfig.GetListOfPlayerNames)}
+                   ├ Player Servers History: {GetCheckmark(JSONConfig.GetListOfPlayerServers)}
+                   └ Server Description: {GetCheckmark(JSONConfig.GetServerDescription)}
+
+                   📸 <b>Notifications</b>
+                   └ Screenshot on Join: {GetCheckmark(JSONConfig.SendScreenshotWhenJoined)}
+
+                   ⚡ <b>Connection Settings</b>
+                   ├ Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds}s
+                   ├ Queue Limit: {(JSONConfig.QueueLimit == 0 ? "None" : JSONConfig.QueueLimit.ToString())}
+                   └ Connect Timer: {JSONConfig.ConnectTimerMinutes} min
+
+                    <i>Use buttons below to modify settings</i>";
+        }
+
+        public static string GetCheckmark(bool value)
+        {
+            return value ? "✅ Enabled" : "❌ Disabled";
+        }
+
         public static string ServerOnline(string name) =>
-            $"Server {name} is now online. Connecting...";
+            $"Server <b>{name}</b> is now online. Connecting...";
 
         public static string Connect(string name, int playersCount, int queueCount) =>
             $"You selected \"{name}\"\n" +

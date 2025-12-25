@@ -77,7 +77,7 @@ namespace RustAI
             var playersCount = await ServerHandler.GetPlayersCount(serverJson);
             var queue = await ServerHandler.GetQueuedPlayers(serverJson);
             var message = Messages.Connect(name, playersCount, queue);
-            var keyboard = KeyboardFactory.BuildConnectKeyboard(serverID);
+            var keyboard = KeyboardFactory.BuildConnect(serverID);
 
             await _bot.SendMessageAsync(message, keyboard);
         }

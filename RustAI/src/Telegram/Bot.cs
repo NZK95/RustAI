@@ -5,7 +5,6 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace RustAI
 {
@@ -33,7 +32,6 @@ namespace RustAI
 
             _commands = new[]
             {
-                    new BotCommand(command: "about", description: "Show author and project information"),
                     new BotCommand(command: "settings", description: "Show and change config.json settings"),
                     new BotCommand(command: "players", description: "Show player information"),
                     new BotCommand(command: "servers", description: "Show server information"),
@@ -255,7 +253,7 @@ namespace RustAI
             if (await ProcessCallbackOtherDataAsync(callbackData))
                 return;
 
-            await ProcessCallbackMainDataAsync(callbackData);
+            await ProcessCallbackMainDataAsync(callbackData, update.CallbackQuery);
         }
 
         private async Task<bool> ProcessCallbackOtherDataAsync(string callbackData)
@@ -301,7 +299,7 @@ namespace RustAI
             }
         }
 
-        private async Task ProcessCallbackMainDataAsync(string callbackData)
+        private async Task ProcessCallbackMainDataAsync(string callbackData, CallbackQuery cq)
         {
             var splittedCallbackData = callbackData.Split('@');
             var prefix = splittedCallbackData[0];
@@ -359,6 +357,76 @@ namespace RustAI
                     var rustServiceTimer = new RustService(this, _cancellation);
                     _ = rustServiceTimer.ConnectAfterTimerAsync(_serverId);
                     break;
+
+                case Constants.PrefixPlayers:
+                    await HandleUserMessageAsync("/players");
+                    break;
+
+                case Constants.PrefixServers:
+                    await HandleUserMessageAsync("/servers");
+                    break;
+
+                case Constants.PrefixLaunch:
+                    await HandleUserMessageAsync("/launch");
+                    break;
+
+                case Constants.PrefixQuit:
+                    await HandleUserMessageAsync("/quit");
+                    break;
+
+                case Constants.PrefixConnect:
+                    await HandleUserMessageAsync("/connect");
+                    break;
+
+                case Constants.PrefixAutoConnect:
+                    await HandleUserMessageAsync("/autoconnect");
+                    break;
+
+                case Constants.PrefixDisconnect:
+                    await HandleUserMessageAsync("/disconnect");
+                    break;
+
+                case Constants.PrefixStatus:
+                    await HandleUserMessageAsync("/status");
+                    break;
+
+                case Constants.PrefixAdd:
+                    await HandleUserMessageAsync("/add");
+                    break;
+
+                case Constants.PrefixRemove:
+                    await HandleUserMessageAsync("/remove");
+                    break;
+
+                case Constants.PrefixList:
+                    await HandleUserMessageAsync("/list");
+                    break;
+
+                case Constants.PrefixClear:
+                    await HandleUserMessageAsync("/clear");
+                    break;
+
+                case Constants.PrefixSettings:
+                    await _telegramClient.EditMessageCaption(
+                        chatId: JSONConfig.ChatID,
+                        parseMode: ParseMode.Html,
+                        caption: await Messages.BuildSettingsCaption(),
+                        messageId: cq.Message.Id,
+                        replyMarkup: _keyboardFactory.Settings,
+                        cancellationToken: _cancellation.Token);
+
+                    break;
+
+                case Constants.PrefixBackSettings:
+                    await _telegramClient.EditMessageCaption(
+                        chatId: JSONConfig.ChatID,
+                        caption: _startMessage,
+                        parseMode: ParseMode.Html,
+                        replyMarkup: _keyboardFactory.Start,
+                        messageId: cq.Message.Id,
+                        cancellationToken: _cancellation.Token);
+
+                    break;
             }
         }
 
@@ -372,8 +440,9 @@ namespace RustAI
                        photo: InputFile.FromUri(Constants.ProjectLogo),
                        caption: _startMessage,
                        parseMode: ParseMode.Html,
+                       replyMarkup: _keyboardFactory.Start,
                        cancellationToken: _cancellation.Token);
-                    break; 
+                    break;
 
                 case "/servers":
                     _status = Status.WAITING_FOR_SERVER_ID_INFO;
@@ -409,7 +478,7 @@ namespace RustAI
                     await SendMessageAsync(Messages.ConnectToServer, _keyboardFactory.AutoConnects);
                     break;
 
-                case "/config":
+                case "/settings":
                     break;
 
                 case "/list":
@@ -437,10 +506,6 @@ namespace RustAI
 
                 case "/status":
                     await GetConnectionStatus();
-                    break;
-
-                case "/about":
-                    await SendMessageAsync(Builders.BuildAboutMessage());
                     break;
             }
         }
@@ -498,6 +563,12 @@ namespace RustAI
 
         private async Task ClearTrackedPlayersAsync()
         {
+            if (JSONConfig.TrackedPlayers.Count <= 0)
+            {
+                await SendMessageAsync(Messages.NoTrackedPlayers);
+                    return;
+            }
+
             foreach (var tp in JSONConfig.TrackedPlayers)
                 await JSONConfigHandler.RemoveTrackedPlayerAsync(tp);
 

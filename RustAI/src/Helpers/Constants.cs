@@ -18,10 +18,10 @@
         public const string ProjectName = "RustAI";
         public const string ProjectLogo = "https://raw.githubusercontent.com/NZK95/RustAI/master/RustAI/assets/images/logo.png";
         public static readonly string ProjectShortDescription = $"RustAI Bot - your personal Rust assistant\n{Builders.BuildRustAIProjectLink()}";
-        public static readonly string ProjectStartMessage = $@"What can this bot do?
+        public static readonly string ProjectStartMessage = $@"<b>What can this bot do?</b>
 
 🤖 Manage Rust smartly.
-RustAI Bot is your ultimate Rust companion — built for real-time 
+<b>RustAI Bot</b> is your ultimate Rust companion — built for real-time 
 server management and player tracking so you never miss a moment.
 
 ⚡ Real-Time Server Monitoring
@@ -46,6 +46,20 @@ server management and player tracking so you never miss a moment.
         public const string PrefixConnectNow = "ConnectNow";
         public const string PrefixConnectQueue = "ConnectQueue";
         public const string PrefixConnectTimer = "ConnectTimer";
+        public const string PrefixPlayers = "Start-Players";
+        public const string PrefixServers = "Start-Servers";
+        public const string PrefixLaunch = "Start-Launch";
+        public const string PrefixQuit = "Start-Quit";
+        public const string PrefixConnect = "Start-Connect";
+        public const string PrefixAutoConnect = "Start-AutoConnect";
+        public const string PrefixDisconnect = "Start-Disconnect";
+        public const string PrefixStatus = "Start-Status";
+        public const string PrefixAdd = "Start-Add";
+        public const string PrefixRemove = "Start-Remove";
+        public const string PrefixList = "Start-List";
+        public const string PrefixClear = "Start-Clear";
+        public const string PrefixSettings = "Start-Settings";
+        public const string PrefixBackSettings = "Settings-Back";
 
         public const string ClientConnectCommandPrefix = "client.connect ";
         public const string ClientDisconnectCommand = "client.disconnect";

@@ -14,11 +14,6 @@ namespace RustAI
             return "https://github.com/NZK95";
         }
 
-        public static string BuildAboutMessage()
-        {
-            return $"🌐 Developer: {BuildAuthorGitHubLink()}" +
-                   $"\n🌐 RustAI: {BuildRustAIProjectLink()}";
-        }
         public static string BuildPlayerNamesFileName(string name)
         {
             return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm")} - {name} - names.txt";
