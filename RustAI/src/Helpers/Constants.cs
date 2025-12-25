@@ -21,7 +21,7 @@
         public static readonly string ProjectStartMessage = $@"What can this bot do?
 
 🤖 Manage Rust smartly.
-**RustAI Bot** is your ultimate Rust companion — built for real-time 
+RustAI Bot is your ultimate Rust companion — built for real-time 
 server management and player tracking so you never miss a moment.
 
 ⚡ Real-Time Server Monitoring
@@ -30,7 +30,7 @@ server management and player tracking so you never miss a moment.
 📊 Advanced Analytics
 ⚙️ Smart Notifications
 
-🌐 GitHub: {Builders.BuildRustAIProjectLink()}";
+🌐 {Builders.BuildRustAIProjectLink()}";
 
         public const string NotPlaying = "Not playing";
         public const string NA = "N/A";
