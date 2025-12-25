@@ -1,4 +1,5 @@
 # RustAI
+[![Downloads](https://img.shields.io/github/downloads/NZK95/RustAI/total.svg)](https://github.com/NZK95/RustAI/releases)
 
 
 ## Troubleshooting
