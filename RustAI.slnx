@@ -1,9 +1,3 @@
 <Solution>
-  <Folder Name="/docs/">
-    <File Path="1" />
-  </Folder>
-  <Folder Name="/docs/d/">
-    <File Path="1" />
-  </Folder>
   <Project Path="RustAI/RustAI.csproj" />
 </Solution>
