@@ -1,6 +1,9 @@
 # RustAI
 [![Downloads](https://img.shields.io/github/downloads/NZK95/RustAI/total.svg)](https://github.com/NZK95/RustAI/releases)
 
+## Known Issues
+
+## Requirements
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
