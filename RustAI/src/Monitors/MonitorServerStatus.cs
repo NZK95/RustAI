@@ -16,10 +16,11 @@
             while (!_cancellation.IsCancellationRequested)
             {
                 var json = await ServerHandler.GetJson(serverID);
-                var status = await ServerHandler.GetStatus(json);
                 var name = await ServerHandler.GetName(json);
+                var playerCount = await ServerHandler.GetPlayersCount(json);
+                var queuedPlayers = await ServerHandler.GetQueuedPlayers(json);
 
-                if (status == "online")
+                if (playerCount > 0 || queuedPlayers > 0)
                 {
                     await _bot.SendMessageAsync(Messages.ServerOnline(name));
                     var rustService = new RustService(_bot, _cancellation);

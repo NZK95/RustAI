@@ -11,6 +11,8 @@ namespace RustAI
     public class TelegramBot
     {
         private Status _status;
+        private List<int> _messageId;
+        private int _startMessageId;
         private string _serverId;
         private string _playerId;
         private TelegramBotClient _telegramClient;
@@ -29,6 +31,7 @@ namespace RustAI
             _startMessage = Constants.ProjectStartMessage;
             _cancellation = new CancellationTokenSource();
             _keyboardFactory = new KeyboardFactory();
+            _messageId = new List<int>();
 
             _commands = new[]
             {
@@ -126,13 +129,13 @@ namespace RustAI
                 return;
             }
 
-            if (await ProcessStateAsync(message))
+            if (await ProcessStateAsync(message, update))
                 return;
 
             await HandleUserMessageAsync(message!);
         }
 
-        private async Task<bool> ProcessStateAsync(string message)
+        private async Task<bool> ProcessStateAsync(string message, Update update)
         {
             if (message == null || IsMessageOneOfBasicCommands(message))
                 return false;
@@ -236,8 +239,145 @@ namespace RustAI
                         return true;
                     }
 
+                case Status.WAITING_FOR_RUST_LAUNCH_DELAY:
+                    {
+                        _messageId.Add(update.Message.MessageId);
+
+                        if (int.TryParse(message, out int val) && val > 0)
+                        {
+                            JSONConfig.RustLaunchDelaySeconds = val;
+                            await JSONConfigHandler.UpdateConfig();
+
+                            var sentMessage = await _telegramClient.SendMessage(
+                                                 chatId: JSONConfig.ChatID,
+                                                 parseMode: ParseMode.Html,
+                                                 text: Messages.UpdatedRustLaunchDelay,
+                                                 cancellationToken: _cancellation.Token);
+
+                            await _telegramClient.EditMessageReplyMarkup(
+                                                chatId: JSONConfig.ChatID,
+                                                replyMarkup: KeyboardFactory.BuildSettings(),
+                                                messageId: _startMessageId,
+                                                cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+                        }
+                        else
+                        {
+                            var sentMessage = await _telegramClient.SendMessage(
+                                             chatId: JSONConfig.ChatID,
+                                             parseMode: ParseMode.Html,
+                                             text: Messages.InvalidInput,
+                                             cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+                        }
+
+                        _status = Status.NONE;
+                        return true;
+                    }
+
+                case Status.WAITING_FOR_QUEUE_LIMIT:
+                    {
+                        _messageId.Add(update.Message.MessageId);
+
+                        if (int.TryParse(message, out int val) && val >= 0)
+                        {
+                            JSONConfig.QueueLimit = val;
+                            await JSONConfigHandler.UpdateConfig();
+
+                            var sentMessage = await _telegramClient.SendMessage(
+                                                 chatId: JSONConfig.ChatID,
+                                                 parseMode: ParseMode.Html,
+                                                 text: Messages.UpdatedQueueLimit,
+                                                 cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+
+                            await _telegramClient.EditMessageReplyMarkup(
+                              chatId: JSONConfig.ChatID,
+                              replyMarkup: KeyboardFactory.BuildSettings(),
+                              messageId: _startMessageId,
+                              cancellationToken: _cancellation.Token);
+                        }
+                        else
+                        {
+                            var sentMessage = await _telegramClient.SendMessage(
+                                             chatId: JSONConfig.ChatID,
+                                             parseMode: ParseMode.Html,
+                                             text: Messages.InvalidInput,
+                                             cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+                        }
+
+                        _status = Status.NONE;
+                        return true;
+                    }
+
+                case Status.WAITING_FOR_CONNECT_TIMER:
+                    {
+                        _messageId.Add(update.Message.MessageId);
+
+                        if (double.TryParse(message, out double val) && val > 0)
+                        {
+                            JSONConfig.ConnectTimerMinutes = val;
+                            await JSONConfigHandler.UpdateConfig();
+
+                            var sentMessage = await _telegramClient.SendMessage(
+                                                 chatId: JSONConfig.ChatID,
+                                                 parseMode: ParseMode.Html,
+                                                 text: Messages.UpdatedConnectTimer,
+                                                 cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+
+                            await _telegramClient.EditMessageReplyMarkup(
+                              chatId: JSONConfig.ChatID,
+                              replyMarkup: KeyboardFactory.BuildSettings(),
+                              messageId: _startMessageId,
+                              cancellationToken: _cancellation.Token);
+                        }
+                        else
+                        {
+                            var sentMessage = await _telegramClient.SendMessage(
+                                             chatId: JSONConfig.ChatID,
+                                             parseMode: ParseMode.Html,
+                                             text: Messages.InvalidInput,
+                                             cancellationToken: _cancellation.Token);
+
+                            _messageId.Add(sentMessage.MessageId);
+                            await Task.Delay(Constants.ClearMessaggesIntervalMs);
+                            await ClearMessages();
+                        }
+
+                        _status = Status.NONE;  
+                        return true;
+                    }
+
                 default:
                     return false;
+            }
+        }
+
+        private async Task ClearMessages()
+        {
+            foreach (var id in _messageId)
+            {
+                await _telegramClient.DeleteMessage(
+                    chatId: JSONConfig.ChatID,
+                    messageId: id,
+                    cancellationToken: _cancellation.Token);
             }
         }
 
@@ -408,70 +548,155 @@ namespace RustAI
                     break;
 
                 case Constants.PrefixSettings:
-                    await _telegramClient.EditMessageCaption(
-                        chatId: JSONConfig.ChatID,
-                        parseMode: ParseMode.Html,
-                        caption: await Messages.BuildSettingsCaption(),
-                        messageId: cq.Message.Id,
-                        replyMarkup: KeyboardFactory.BuildSettings(),
-                        cancellationToken: _cancellation.Token);
+                    {
+                        await _telegramClient.EditMessageCaption(
+                            chatId: JSONConfig.ChatID,
+                            parseMode: ParseMode.Html,
+                            caption: await Messages.BuildSettingsCaption(),
+                            messageId: cq.Message.Id,
+                            replyMarkup: KeyboardFactory.BuildSettings(),
+                            cancellationToken: _cancellation.Token);
 
-                    break;
+                        break;
+                    }
 
                 case Constants.PrefixBackSettings:
-                    await _telegramClient.EditMessageCaption(
-                        chatId: JSONConfig.ChatID,
-                        caption: _startMessage,
-                        parseMode: ParseMode.Html,
-                        replyMarkup: _keyboardFactory.Start,
-                        messageId: cq.Message.Id,
-                        cancellationToken: _cancellation.Token);
+                    {
+                        await _telegramClient.EditMessageCaption(
+                            chatId: JSONConfig.ChatID,
+                            caption: _startMessage,
+                            parseMode: ParseMode.Html,
+                            replyMarkup: _keyboardFactory.Start,
+                            messageId: cq.Message.Id,
+                            cancellationToken: _cancellation.Token);
 
-                    break;
+                        break;
+                    }
 
                 case Constants.PrefixUpdatePNH:
-                    JSONConfig.GetListOfPlayerNames = !JSONConfig.GetListOfPlayerNames;
-                    await JSONConfigHandler.UpdateConfig();
+                    {
+                        JSONConfig.GetListOfPlayerNames = !JSONConfig.GetListOfPlayerNames;
+                        await JSONConfigHandler.UpdateConfig();
 
-                    await _telegramClient.EditMessageReplyMarkup(
-                      chatId: JSONConfig.ChatID,
-                      replyMarkup: KeyboardFactory.BuildSettings(),
-                      messageId: cq.Message.Id,
-                      cancellationToken: _cancellation.Token);
-                    break;
+                        await _telegramClient.EditMessageReplyMarkup(
+                          chatId: JSONConfig.ChatID,
+                          replyMarkup: KeyboardFactory.BuildSettings(),
+                          messageId: cq.Message.Id,
+                          cancellationToken: _cancellation.Token);
+                        break;
+                    }
 
                 case Constants.PrefixUpdateGSD:
-                    JSONConfig.GetServerDescription = !JSONConfig.GetServerDescription;
-                    await JSONConfigHandler.UpdateConfig();
+                    {
+                        JSONConfig.GetServerDescription = !JSONConfig.GetServerDescription;
+                        await JSONConfigHandler.UpdateConfig();
 
-                    await _telegramClient.EditMessageReplyMarkup(
-                      chatId: JSONConfig.ChatID,
-                      replyMarkup: KeyboardFactory.BuildSettings(),
-                      messageId: cq.Message.Id,
-                      cancellationToken: _cancellation.Token);
-                    break;
+                        await _telegramClient.EditMessageReplyMarkup(
+                          chatId: JSONConfig.ChatID,
+                          replyMarkup: KeyboardFactory.BuildSettings(),
+                          messageId: cq.Message.Id,
+                          cancellationToken: _cancellation.Token);
+                        break;
+                    }
 
                 case Constants.PrefixUpdatePSH:
-                    JSONConfig.GetListOfPlayerServers = !JSONConfig.GetListOfPlayerServers;
-                    await JSONConfigHandler.UpdateConfig();
+                    {
+                        JSONConfig.GetListOfPlayerServers = !JSONConfig.GetListOfPlayerServers;
+                        await JSONConfigHandler.UpdateConfig();
 
-                    await _telegramClient.EditMessageReplyMarkup(
-                      chatId: JSONConfig.ChatID,
-                      replyMarkup: KeyboardFactory.BuildSettings(),
-                      messageId: cq.Message.Id,
-                      cancellationToken: _cancellation.Token);
-                    break;
+                        await _telegramClient.EditMessageReplyMarkup(
+                          chatId: JSONConfig.ChatID,
+                          replyMarkup: KeyboardFactory.BuildSettings(),
+                          messageId: cq.Message.Id,
+                          cancellationToken: _cancellation.Token);
+                        break;
+                    }
 
                 case Constants.PrefixUpdateSWJ:
-                    JSONConfig.SendScreenshotWhenJoined = !JSONConfig.SendScreenshotWhenJoined;
-                    await JSONConfigHandler.UpdateConfig();
+                    {
+                        JSONConfig.SendScreenshotWhenJoined = !JSONConfig.SendScreenshotWhenJoined;
+                        await JSONConfigHandler.UpdateConfig();
 
-                    await _telegramClient.EditMessageReplyMarkup(
-                      chatId: JSONConfig.ChatID,
-                      replyMarkup: KeyboardFactory.BuildSettings(),
-                      messageId: cq.Message.Id,
-                      cancellationToken: _cancellation.Token);
-                    break;
+                        await _telegramClient.EditMessageReplyMarkup(
+                          chatId: JSONConfig.ChatID,
+                          replyMarkup: KeyboardFactory.BuildSettings(),
+                          messageId: cq.Message.Id,
+                          cancellationToken: _cancellation.Token);
+                        break;
+                    }
+
+                case Constants.PrefixUpdateSP:
+                    {
+                        JSONConfig.GetServerPlayers = !JSONConfig.GetServerPlayers;
+                        await JSONConfigHandler.UpdateConfig();
+
+                        await _telegramClient.EditMessageReplyMarkup(
+                          chatId: JSONConfig.ChatID,
+                          replyMarkup: KeyboardFactory.BuildSettings(),
+                          messageId: cq.Message.Id,
+                          cancellationToken: _cancellation.Token);
+                        break;
+                    }
+
+                case Constants.PrefixUpdateRLD:
+                    {
+                        _messageId.Clear();
+
+                        var sentMessageRLD = await _telegramClient.SendMessage(
+                         chatId: JSONConfig.ChatID,
+                         parseMode: ParseMode.Html,
+                         text: Messages.UpdateRustLaunchDelay,
+                         replyMarkup: new ForceReplyMarkup
+                         {
+                             Selective = true,
+                             InputFieldPlaceholder = "For example: 60"
+                         },
+                         cancellationToken: _cancellation.Token);
+
+                        _messageId.Add(sentMessageRLD.MessageId);
+                        _status = Status.WAITING_FOR_RUST_LAUNCH_DELAY;
+                        break;
+                    }
+
+                case Constants.PrefixUpdateQL:
+                    {
+                        _messageId.Clear();
+
+                        var sentMessageQL = await _telegramClient.SendMessage(
+                        chatId: JSONConfig.ChatID,
+                        parseMode: ParseMode.Html,
+                        text: Messages.UpdateQueueLimit,
+                        replyMarkup: new ForceReplyMarkup
+                        {
+                            Selective = true,
+                            InputFieldPlaceholder = "For example: 100"
+                        },
+                        cancellationToken: _cancellation.Token);
+
+                        _messageId.Add(sentMessageQL.MessageId);
+                        _status = Status.WAITING_FOR_QUEUE_LIMIT;
+                        break;
+                    }
+
+                case Constants.PrefixUpdateCT:
+                    {
+                        _messageId.Clear();
+
+                        var sentMessageCT = await _telegramClient.SendMessage(
+                         chatId: JSONConfig.ChatID,
+                         parseMode: ParseMode.Html,
+                         text: Messages.UpdateConnectTimer,
+                         replyMarkup: new ForceReplyMarkup
+                         {
+                             Selective = true,
+                             InputFieldPlaceholder = "For example: 2 / 0.5"
+                         },
+                         cancellationToken: _cancellation.Token);
+
+                        _messageId.Add(sentMessageCT.MessageId);
+                        _status = Status.WAITING_FOR_CONNECT_TIMER;
+                        break;
+                    }
             }
         }
 
@@ -479,14 +704,15 @@ namespace RustAI
         {
             switch (message)
             {
+                case "/menu":
                 case "/start":
-                    await _telegramClient.SendPhoto(
+                    _startMessageId = (await _telegramClient.SendPhoto(
                        chatId: JSONConfig.ChatID,
                        photo: InputFile.FromUri(Constants.ProjectLogo),
                        caption: _startMessage,
                        parseMode: ParseMode.Html,
                        replyMarkup: _keyboardFactory.Start,
-                       cancellationToken: _cancellation.Token);
+                       cancellationToken: _cancellation.Token)).MessageId;
                     break;
 
                 case "/servers":
@@ -655,16 +881,16 @@ namespace RustAI
                 return;
             }
 
+            var caption = await PlayerHandler.GetPlayerFullInformation(json);
+            var isFavorited = JSONConfigHandler.IsPlayerAlreadyFavorited(_playerId);
+
+            await SendMessageAsync(caption, isFavorited ? _keyboardFactory.FavoritePlayerRemove : _keyboardFactory.FavoritePlayerAdd);
+
             if (JSONConfig.GetListOfPlayerServers)
                 await SendServersListAsync(json);
 
             if (JSONConfig.GetListOfPlayerNames)
                 await SendNamesListAsync();
-
-            var caption = await PlayerHandler.GetPlayerFullInformation(json);
-            var isFavorited = JSONConfigHandler.IsPlayerAlreadyFavorited(_playerId);
-
-            await SendMessageAsync(caption, isFavorited ? _keyboardFactory.FavoritePlayerRemove : _keyboardFactory.FavoritePlayerAdd);
         }
 
         private async Task SendServersListAsync(JsonDocument doc)
@@ -703,6 +929,26 @@ namespace RustAI
                 chatId: JSONConfig.ChatID,
                 cancellationToken: _cancellation.Token,
                 caption: Messages.PlayerHistoryNames(await PlayerHandler.GetName(newJson)),
+                document: inputFile);
+        }
+
+        private async Task SendPlayers()
+        {
+            var json = await ServerHandler.GetJson(_serverId, "player");
+            var names = ServerHandler.GetPlayersName(json);
+            var fileWatermark = Builders.BuildAuthorFileWatermark();
+
+            var fileName = Builders.BuildServerPlayersFileName(await ServerHandler.GetName(json));
+            var path = Builders.BuildServerPlayersFilePath(fileName);
+
+            await File.WriteAllTextAsync(path, fileWatermark + names);
+            await using var stream = File.OpenRead(path);
+            var inputFile = InputFile.FromStream(stream);
+
+            await _telegramClient.SendDocument(
+                chatId: JSONConfig.ChatID,
+                caption: Messages.ServerPlayers(await ServerHandler.GetName(json)),
+                cancellationToken: _cancellation.Token,
                 document: inputFile);
         }
 
@@ -753,6 +999,9 @@ namespace RustAI
 
             if (!mapSent)
                 await SendMessageAsync(caption, isFavorited ? _keyboardFactory.FavoriteServerRemove : _keyboardFactory.FavoriteServerAdd);
+
+            if (JSONConfig.GetServerPlayers)
+                await SendPlayers();
         }
 
         private async Task SendTrackListAsync()

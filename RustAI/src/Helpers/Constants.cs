@@ -8,6 +8,7 @@
         public const int ShortDelayMs = 1000;
         public const int TrackCheckIntervalMs = 30000;
         public const int QueueCheckIntervalMs = 7000;
+        public const int ClearMessaggesIntervalMs = 3000;
         public static int RustLaunchDelayMs = (int)TimeSpan.FromSeconds(JSONConfig.RustLaunchDelaySeconds).TotalMilliseconds;
         public static int ConnectTimerDelayMs = (int)TimeSpan.FromMinutes(JSONConfig.ConnectTimerMinutes).TotalMilliseconds;
 
@@ -30,7 +31,7 @@ server management and player tracking so you never miss a moment.
 📊 Advanced Analytics
 ⚙️ Smart Notifications
 
-⚠️ If you encounter bugs or unexpected behavior, please report them here {Builders.BuildRustAIProjectLink()}/issues";
+⚠️ If you encounter bugs/unexpected behavior/errors or just need help, please report them here: {Builders.BuildRustAIProjectLink()}/issues";
 
         public const string NotPlaying = "Not playing";
         public const string NA = "N/A";
@@ -64,6 +65,14 @@ server management and player tracking so you never miss a moment.
         public const string PrefixUpdateGSD = "Settings-UpdateGSD";
         public const string PrefixUpdatePSH = "Settings-UpdatePSH";
         public const string PrefixUpdateSWJ = "Settings-UpdateSWJ";
+        public const string PrefixUpdateSP = "Settings-UpdateSP";
+
+        public const string PrefixUpdateRLD = "Settings-UpdateRLD";
+        public const string PrefixUpdateQL = "Settings-UpdateQL";
+        public const string PrefixUpdateCT = "Settings-UpdateCT";
+        public const string PrefixUpdateUID = "Settings-UpdateUID";
+
+
 
         public const string ClientConnectCommandPrefix = "client.connect ";
         public const string ClientDisconnectCommand = "client.disconnect";

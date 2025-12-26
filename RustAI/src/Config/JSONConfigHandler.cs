@@ -25,7 +25,8 @@ namespace RustAI
                 SendScreenshotWhenJoined = JSONConfig.SendScreenshotWhenJoined,
                 TrackedPlayers = JSONConfig.TrackedPlayers,
                 QueueLimit = JSONConfig.QueueLimit,
-                ConnectTimerMinutes = JSONConfig.ConnectTimerMinutes
+                ConnectTimerMinutes = JSONConfig.ConnectTimerMinutes,
+                GetServerPlayers = JSONConfig.GetServerPlayers
             };
 
             await File.WriteAllTextAsync(JSONConfig.PathToConfig, JsonSerializer.Serialize(config, _jsonOptions));

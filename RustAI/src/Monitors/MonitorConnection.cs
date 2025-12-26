@@ -16,7 +16,7 @@
             while (!_cancellation.IsCancellationRequested)
             {
                 var json = await ServerHandler.GetJson(serverID, "session");
-                var players = ServerHandler.GetPlayers(json);
+                var players = ServerHandler.GetPlayersID(json);
                 var isUserEntered = PlayerHandler.IsUserEntered(players, JSONConfig.BattlemetricsID);
 
                 if (players.Count == 0 || players == null)

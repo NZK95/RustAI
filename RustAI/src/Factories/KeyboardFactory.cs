@@ -105,23 +105,24 @@ namespace RustAI
 
             var serverDescription = $"{Formatters.GetEmoji(JSONConfig.GetServerDescription)} Server Description";
             var screnenshotWhenJoined = $"{Formatters.GetEmoji(JSONConfig.SendScreenshotWhenJoined)} Screenshot When Joined";
+            var serverPlayers = $"{Formatters.GetEmoji(JSONConfig.GetServerPlayers)} Server Players";
 
             rows.Add(new[]
             {
                 InlineKeyboardButton.WithCallbackData(serverDescription, Constants.PrefixUpdateGSD),
-                InlineKeyboardButton.WithCallbackData(screnenshotWhenJoined, Constants.PrefixUpdateSWJ)
+                InlineKeyboardButton.WithCallbackData(screnenshotWhenJoined, Constants.PrefixUpdateSWJ),
+                InlineKeyboardButton.WithCallbackData(serverPlayers, Constants.PrefixUpdateSP)
             });
 
             rows.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData($"Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds} sec", Constants.PrefixBackSettings),
-                InlineKeyboardButton.WithCallbackData($"Queue Limit: {JSONConfig.QueueLimit}", Constants.PrefixBackSettings)
+                InlineKeyboardButton.WithCallbackData($"Rust Launch Delay: {JSONConfig.RustLaunchDelaySeconds} sec", Constants.PrefixUpdateRLD),
+                InlineKeyboardButton.WithCallbackData($"Queue Limit: {JSONConfig.QueueLimit}", Constants.PrefixUpdateQL)
             });
 
             rows.Add(new[]
             {
-                InlineKeyboardButton.WithCallbackData($"Connect Timer: {JSONConfig.ConnectTimerMinutes} min", Constants.PrefixBackSettings),
-                InlineKeyboardButton.WithCallbackData($"User ID: {JSONConfig.BattlemetricsID}", Constants.PrefixBackSettings)
+                InlineKeyboardButton.WithCallbackData($"Connect Timer: {JSONConfig.ConnectTimerMinutes} min", Constants.PrefixUpdateCT),
             });
 
             rows.Add(new[]

@@ -10,6 +10,7 @@ namespace RustAI
         public static string PathToScreenshots { get; private set; }
         public static string PathToExportedPlayersNames { get; private set; }
         public static string PathToExportedPlayersServers { get; private set; }
+        public static string PathToExportedServerPlayers { get; private set; }
         public static string TokenBot { get; set; }
         public static long ChatID { get; set; }
         public static string BattlemetricsID { get; set; }
@@ -21,6 +22,7 @@ namespace RustAI
         public static List<TrackedPlayer> TrackedPlayers { get; set; }
         public static bool GetListOfPlayerNames { get; set; }
         public static bool GetServerDescription { get; set; }
+        public static bool GetServerPlayers { get; set; }
         public static bool GetListOfPlayerServers { get; set; }
         public static bool SendScreenshotWhenJoined { get; set; }
 
@@ -28,8 +30,9 @@ namespace RustAI
         {
             BasePath = AppContext.BaseDirectory;
             PathToConfig = BasePath + @"data\config.json";
-            PathToExportedPlayersNames = BasePath + @"exports\players-names";
-            PathToExportedPlayersServers = BasePath + @"exports\players-servers";
+            PathToExportedPlayersNames = BasePath + @"exports\player-names";
+            PathToExportedPlayersServers = BasePath + @"exports\player-servers";
+            PathToExportedServerPlayers = BasePath + @"exports\server-players";
             PathToScreenshots = BasePath + @"screenshots";
 
             DeserializeData();
@@ -54,6 +57,7 @@ namespace RustAI
             GetListOfPlayerNames = deserializedBot.GetListOfPlayerNames;
             GetListOfPlayerServers = deserializedBot.GetListOfPlayerServers;
             GetServerDescription = deserializedBot.GetServerDescription;
+            GetServerPlayers = deserializedBot.GetServerPlayers;
             RustLaunchDelaySeconds = deserializedBot.RustLaunchDelaySeconds;
             BattlemetricsID = deserializedBot.BattlemetricsID;
             SendScreenshotWhenJoined = deserializedBot.SendScreenshotWhenJoined;

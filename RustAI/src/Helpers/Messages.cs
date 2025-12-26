@@ -42,6 +42,15 @@ namespace RustAI
         public const string Track = "Select a player to track";
         public const string RemoveFromTracking = "Select a player to remove";
 
+        public const string InvalidInput = "❌ Invalid input";
+        public const string UpdateRustLaunchDelay = "Enter new Rust launch delay in seconds:";
+        public const string UpdatedRustLaunchDelay = "✅ Rust launch delay is successfully updated";
+        public const string UpdateQueueLimit = "Enter new queue limit (number of players):";
+        public const string UpdatedQueueLimit = "✅ Queue limit is successfully updated";
+        public const string UpdateConnectTimer = "Enter new connect timer in minutes:";
+        public const string UpdatedConnectTimer = "✅ Connect timer is successfully updated";
+        
+
         public static async Task<string> BuildSettingsCaption()
         {
             return $@"⚙️ <b>Settings RustAI</b>
@@ -103,5 +112,8 @@ Here you can change various program settings that are stored in the <b>config.js
 
         public static string PlayerHistoryNames(string name) =>
             $"List of known names for player \"{name}\"";
+
+        public static string ServerPlayers(string name) =>
+            $"List of players currently on \"{name}\"";
     }
 }

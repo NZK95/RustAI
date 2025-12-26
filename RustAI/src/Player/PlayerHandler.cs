@@ -109,7 +109,7 @@ namespace RustAI
                          Name = x.GetProperty("attributes").GetProperty("identifier").GetString().Trim()
                      }).Select(x => x.Name);
 
-                var result = $"# Found {listOfNames.Count()} names.\n______________________________________________\n\n";
+                var result = $"# Found {listOfNames.Count()} names for {GetName(doc).Result}.\n______________________________________________\n\n";
                 result += string.Join("\n", listOfNames);
 
                 return result;
@@ -129,7 +129,7 @@ namespace RustAI
                          TimePlayed = Date.ConvertSecondsToTimeFormat(x.GetProperty("meta").GetProperty("timePlayed").GetInt64()),
                      });
 
-                var result = $"# Found {listOfServers.Count()} servers.\n______________________________________________\n\n";
+                var result = $"# Found {listOfServers.Count()} servers for {GetName(doc).Result}.\n______________________________________________\n\n";
 
                 foreach (var server in listOfServers)
                     result += $"{server.Name.Trim("\r")} ({server.TimePlayed})\n\n";

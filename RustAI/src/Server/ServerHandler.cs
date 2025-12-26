@@ -383,7 +383,7 @@ namespace RustAI
             catch { return "N/A"; }
         }
 
-        public static List<string> GetPlayers(JsonDocument doc)
+        public static List<string> GetPlayersID(JsonDocument doc)
         {
             try
             {
@@ -399,6 +399,25 @@ namespace RustAI
                 return players ?? new List<string>();
             }
             catch { return new List<string>(); }
+        }
+
+        public static string GetPlayersName(JsonDocument doc)
+        {
+            try
+            {
+                var players = doc?.RootElement.GetProperty("included")
+                    .EnumerateArray()
+                    .Select(x => x.GetProperty("attributes")
+                                  .GetProperty("name")
+                                  .GetString())
+                    .ToList();
+
+                var result = $"# Found {players.Count()} players on {GetName(doc).Result}.\n______________________________________________\n\n";
+                result += string.Join("\n", players);
+
+                return result;
+            }
+            catch { return "N/A"; }
         }
 
         public static async Task<int> GetPlayersCount(JsonDocument doc)

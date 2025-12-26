@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Telegram.Bot.Types;
 
 namespace RustAI
 {
@@ -16,17 +17,27 @@ namespace RustAI
 
         public static string BuildPlayerNamesFileName(string name)
         {
-            return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm")} - {name} - names.txt";
+            return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm.ss")} - names.txt";
+        }
+
+        public static string BuildServerPlayersFileName(string name)
+        {
+            return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm.ss")} - players.txt";
         }
 
         public static string BuildPlayerServersFileName(string name)
         {
-            return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm")} - {name} - servers.txt";
+            return $"{DateTime.Now.ToString("dd.MM.yyyy HH.mm.ss")} - servers.txt";
         }
 
         public static string BuildPlayerNamesFilePath(string fileName)
         {
             return JSONConfig.PathToExportedPlayersNames + $"\\{fileName}";
+        }
+
+        public static string BuildServerPlayersFilePath(string fileName)
+        {
+            return JSONConfig.PathToExportedServerPlayers + $"\\{fileName}";
         }
 
         public static string BuildPlayerServersFilePath(string fileName)
