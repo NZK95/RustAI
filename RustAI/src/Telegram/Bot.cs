@@ -134,7 +134,7 @@ namespace RustAI
 
         private async Task<bool> ProcessStateAsync(string message)
         {
-            if (message == null)
+            if (message == null || IsMessageOneOfBasicCommands(message))
                 return false;
 
             switch (_status)
@@ -166,7 +166,7 @@ namespace RustAI
                         _serverId = message;
 
                         var rustService = new RustService(this, _cancellation);
-                        await rustService.ConnectToServerAsync(_serverId);
+                        _ = rustService.ConnectToServerAsync(_serverId);
                         return true;
                     }
                 case Status.WAITING_FOR_PLAYER_ID:
@@ -321,7 +321,7 @@ namespace RustAI
                     _status = Status.NONE;
                     _serverId = splittedCallbackData[1];
                     var rustService = new RustService(this, _cancellation);
-                    await rustService.ConnectToServerAsync(_serverId);
+                    _ = rustService.ConnectToServerAsync(_serverId);
                     break;
 
                 case Constants.PrefixAutoConnects:
@@ -344,7 +344,7 @@ namespace RustAI
                 case Constants.PrefixConnectNow:
                     _serverId = splittedCallbackData[1];
                     var rustServiceNow = new RustService(this, _cancellation);
-                    await rustServiceNow.ConnectRightNowAsync(_serverId);
+                    _ = rustServiceNow.ConnectRightNowAsync(_serverId);
                     break;
 
                 case Constants.PrefixConnectQueue:
@@ -821,6 +821,17 @@ namespace RustAI
                 }
                 catch { }
             }
+        }
+
+        private bool IsMessageOneOfBasicCommands(string message)
+        {
+            message = message.ToLower().Replace("/", "");
+
+            foreach (var command in _commands)
+                if (command.Command == message)
+                    return true;
+
+            return false;
         }
     }
 }

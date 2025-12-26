@@ -148,7 +148,7 @@ namespace RustAI
             var rows = new List<InlineKeyboardButton[]>();
 
             foreach (var server in JSONConfig.FavoriteServers)
-                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, $"@{Constants.PrefixConnects}{server.Id}") });
+                rows.Add(new[] { InlineKeyboardButton.WithCallbackData(server.Name, $"{Constants.PrefixConnects}@{server.Id}") });
 
             rows.Add(new[] { InlineKeyboardButton.WithCallbackData("Your server id", "user_server_id") });
             return new InlineKeyboardMarkup(rows);
