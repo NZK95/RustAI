@@ -6,6 +6,7 @@
 ## Known Issues
 
 ## Requirements
+- Windows 10 or older
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
