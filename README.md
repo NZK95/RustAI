@@ -4,12 +4,28 @@
 ## Features
 
 ## Known Issues
-
+- The bot may occasionally freeze due to API issues. Please wait and it should resume automatically.
+  
 ## Requirements
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
+- Configure the ```config.json```  file
 - Windows 10 or older
 - Telegram
-- Configure the ```config.json```  file
+
+## Config
+1. Get and paste into ```config.json``` a bot token with ```@BotFather``` bot in Telegram. <br>
+2. Get and paste into ```config.json``` your BattleMetrics ID. <br>
+3. Calculate and paste into ```config.json``` , the time in seconds to launch **Rust** <br>
+
+| Variable  | Type| Action          |
+|------------|-----------------|
+| `QueueLimit`|Int32| It is used for ```/connect```. The connection will be started when the queue on selected server reaches this number.    |
+| `Ctrl + C` | Clear           |
+| `Ctrl + G` | Google          |
+| `Ctrl + E` | Export script   |
+| `Ctrl + L` | Load config     |
+
+## Usage
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
