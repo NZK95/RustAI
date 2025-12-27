@@ -36,7 +36,7 @@
 | `GetServerDescription`        | Boolean | `true`  | Display server description during the `/servers` command. Сan be annoying if the description is too long.                                                     |
 | `GetServerPlayers`            | Boolean | `true`  |  Display the list of players currently on the server.                                       |
 | `SendScreenshotWhenJoined`    | Boolean | `false` | Automatically send a screenshot when successfully joining a server.                                  |
-
+> The program will not launch if the config is not set correctly.
 
 ## Usage
 
