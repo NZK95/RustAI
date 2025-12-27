@@ -5,7 +5,8 @@
 
 ## Known Issues
 - The bot may occasionally freeze due to API issues. Please wait and it should resume automatically.
-  
+- The  `/disconnect` command may not work.
+
 ## Requirements
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
 - Configure the ```config.json```  file
