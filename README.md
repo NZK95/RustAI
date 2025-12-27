@@ -2,11 +2,16 @@
 [![Downloads](https://img.shields.io/github/downloads/NZK95/RustAI/total.svg)](https://github.com/NZK95/RustAI/releases)
 
 ## Features
-
+- Advanced server and player analytics.
+- Player tracking with allerts.
+- Smart notifications.
+- Server connection management with autoconnect too.
+- Rust launch management.
+  
 ## Known Issues
 - The bot may occasionally freeze due to API issues. Please wait and it should resume automatically.
-- The  `/disconnect` command may not work.
-
+- The  `/disconnect` and  `/autoconnect` command may not work.
+  
 ## Requirements
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
 - Configure the ```config.json```  file
