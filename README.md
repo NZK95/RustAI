@@ -6,7 +6,10 @@
 ## Known Issues
 
 ## Requirements
+- Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
 - Windows 10 or older
+- Telegram
+- Configure the ```config.json```  file
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
