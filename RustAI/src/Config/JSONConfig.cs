@@ -12,7 +12,7 @@ namespace RustAI
         public static string PathToExportedPlayersServers { get; private set; }
         public static string PathToExportedServerPlayers { get; private set; }
         public static string TokenBot { get; set; }
-        public static long ChatID { get; set; }
+        public static long? ChatID { get; set; }
         public static string BattlemetricsID { get; set; }
         public static int RustLaunchDelaySeconds { get; set; }
         public static int QueueLimit { get; set; }
@@ -50,8 +50,12 @@ namespace RustAI
 
             var deserializedBot = JsonSerializer.Deserialize<Data>(fs, options);
 
+            if (deserializedBot.ChatID == 0)
+                ChatID = null;
+            else
+                ChatID = deserializedBot.ChatID;
+
             TokenBot = deserializedBot.TokenBot;
-            ChatID = deserializedBot.ChatID;
             FavoriteServers = deserializedBot.FavoriteServers;
             FavoritePlayers = deserializedBot.FavoritePlayers;
             GetListOfPlayerNames = deserializedBot.GetListOfPlayerNames;

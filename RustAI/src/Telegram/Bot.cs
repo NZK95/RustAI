@@ -80,8 +80,11 @@ namespace RustAI
 
             var me = _telegramClient.GetMe();
 
-            await SendMessageAsync(Messages.ProgramRunning);
-            await HandleUserMessageAsync("/start");
+            if (JSONConfig.ChatID != null)
+            {
+                await SendMessageAsync(Messages.ProgramRunning);
+                await HandleUserMessageAsync("/start");
+            }
         }
 
         public async Task ShutdownAsync()
@@ -121,6 +124,12 @@ namespace RustAI
 
         private async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken token)
         {
+            if (JSONConfig.ChatID == null && update.Message.Chat.Id != null)
+            {
+                JSONConfig.ChatID = update.Message.Chat.Id;
+                await JSONConfigHandler.UpdateConfigAsync();
+            }
+
             var message = update?.Message?.Text;
 
             if (update.Type == UpdateType.CallbackQuery && update?.CallbackQuery != null)
@@ -246,7 +255,7 @@ namespace RustAI
                         if (int.TryParse(message, out int val) && val > 0)
                         {
                             JSONConfig.RustLaunchDelaySeconds = val;
-                            await JSONConfigHandler.UpdateConfig();
+                            await JSONConfigHandler.UpdateConfigAsync();
 
                             var sentMessage = await _telegramClient.SendMessage(
                                                  chatId: JSONConfig.ChatID,
@@ -288,7 +297,7 @@ namespace RustAI
                         if (int.TryParse(message, out int val) && val >= 0)
                         {
                             JSONConfig.QueueLimit = val;
-                            await JSONConfigHandler.UpdateConfig();
+                            await JSONConfigHandler.UpdateConfigAsync();
 
                             var sentMessage = await _telegramClient.SendMessage(
                                                  chatId: JSONConfig.ChatID,
@@ -330,7 +339,7 @@ namespace RustAI
                         if (double.TryParse(message, out double val) && val > 0)
                         {
                             JSONConfig.ConnectTimerMinutes = val;
-                            await JSONConfigHandler.UpdateConfig();
+                            await JSONConfigHandler.UpdateConfigAsync();
 
                             var sentMessage = await _telegramClient.SendMessage(
                                                  chatId: JSONConfig.ChatID,
@@ -361,7 +370,7 @@ namespace RustAI
                             await ClearMessages();
                         }
 
-                        _status = Status.NONE;  
+                        _status = Status.NONE;
                         return true;
                     }
 
@@ -576,7 +585,7 @@ namespace RustAI
                 case Constants.PrefixUpdatePNH:
                     {
                         JSONConfig.GetListOfPlayerNames = !JSONConfig.GetListOfPlayerNames;
-                        await JSONConfigHandler.UpdateConfig();
+                        await JSONConfigHandler.UpdateConfigAsync();
 
                         await _telegramClient.EditMessageReplyMarkup(
                           chatId: JSONConfig.ChatID,
@@ -589,7 +598,7 @@ namespace RustAI
                 case Constants.PrefixUpdateGSD:
                     {
                         JSONConfig.GetServerDescription = !JSONConfig.GetServerDescription;
-                        await JSONConfigHandler.UpdateConfig();
+                        await JSONConfigHandler.UpdateConfigAsync();
 
                         await _telegramClient.EditMessageReplyMarkup(
                           chatId: JSONConfig.ChatID,
@@ -602,7 +611,7 @@ namespace RustAI
                 case Constants.PrefixUpdatePSH:
                     {
                         JSONConfig.GetListOfPlayerServers = !JSONConfig.GetListOfPlayerServers;
-                        await JSONConfigHandler.UpdateConfig();
+                        await JSONConfigHandler.UpdateConfigAsync();
 
                         await _telegramClient.EditMessageReplyMarkup(
                           chatId: JSONConfig.ChatID,
@@ -615,7 +624,7 @@ namespace RustAI
                 case Constants.PrefixUpdateSWJ:
                     {
                         JSONConfig.SendScreenshotWhenJoined = !JSONConfig.SendScreenshotWhenJoined;
-                        await JSONConfigHandler.UpdateConfig();
+                        await JSONConfigHandler.UpdateConfigAsync();
 
                         await _telegramClient.EditMessageReplyMarkup(
                           chatId: JSONConfig.ChatID,
@@ -628,7 +637,7 @@ namespace RustAI
                 case Constants.PrefixUpdateSP:
                     {
                         JSONConfig.GetServerPlayers = !JSONConfig.GetServerPlayers;
-                        await JSONConfigHandler.UpdateConfig();
+                        await JSONConfigHandler.UpdateConfigAsync();
 
                         await _telegramClient.EditMessageReplyMarkup(
                           chatId: JSONConfig.ChatID,

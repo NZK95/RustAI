@@ -8,7 +8,7 @@ namespace RustAI
         public string TokenBot { get; set; }
 
         [JsonPropertyName("TelegramChatID")]
-        public long ChatID { get; set; }
+        public long? ChatID { get; set; }
         [JsonPropertyName("BattlemetricsID")]
         public string BattlemetricsID { get; set; }
 

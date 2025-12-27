@@ -9,7 +9,7 @@ namespace RustAI
     {
         private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-        public static async Task UpdateConfig()
+        public static async Task UpdateConfigAsync()
         {
             var config= new Data
             {
@@ -35,44 +35,44 @@ namespace RustAI
         public static async Task AddFavoritePlayerAsync(string playerId, string name)
         {
             JSONConfig.FavoritePlayers.Add(new FavoritePlayer { Id = playerId, Name = name });
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task RemoveFavoritePlayerAsync(string playerId)
         {
             JSONConfig.FavoritePlayers.RemoveAll(p => p.Id == playerId);
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task AddFavoriteServerAsync(string serverId, string identifier)
         {
             JSONConfig.FavoriteServers.Add(new FavoriteServer { Id = serverId, Name = identifier});
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task RemoveFavoriteServerAsync(string serverId)
         {
             JSONConfig.FavoriteServers.RemoveAll(p => p.Id == serverId);
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task AddTrackedPlayerAsync(TrackedPlayer player)
         {
             JSONConfig.TrackedPlayers.Add(player);
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task RemoveTrackedPlayerAsync(TrackedPlayer player)
         {
             JSONConfig.TrackedPlayers.RemoveAll(p => p.Id == player.Id);
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task UpdateTrackedPlayerAsync(TrackedPlayer oldPlayer, TrackedPlayer newPlayer)
         {
             JSONConfig.TrackedPlayers.RemoveAll(p => oldPlayer.Id == p.Id);
             JSONConfig.TrackedPlayers.Add(newPlayer);
-            await UpdateConfig();
+            await UpdateConfigAsync();
         }
 
         public static async Task<bool> IsPlayerTrackedAsync(TrackedPlayer player)
