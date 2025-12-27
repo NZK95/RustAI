@@ -17,13 +17,9 @@
 2. Get and paste into ```config.json``` your BattleMetrics ID. <br>
 3. Calculate and paste into ```config.json``` , the time in seconds to launch **Rust** <br>
 
-| Variable  | Type| Action          |
-|------------|-----------------|
-| `QueueLimit`|Int32| It is used for ```/connect```. The connection will be started when the queue on selected server reaches this number.    |
-| `Ctrl + C` | Clear           |
-| `Ctrl + G` | Google          |
-| `Ctrl + E` | Export script   |
-| `Ctrl + L` | Load config     |
+| Variable     | Type   | Action                                                                                                                    |
+|--------------|--------|---------------------------------------------------------------------------------------------------------------------------|
+| `QueueLimit` | Int32  | It is used for `/connect`. The connection will be started when the queue on selected server reaches this number.         |
 
 ## Usage
 
