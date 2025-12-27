@@ -20,7 +20,7 @@
 ## Config
 1. Get and paste into ```config.json``` a bot token with ```@BotFather``` bot in Telegram. <br>
 2. Get and paste into ```config.json``` your BattleMetrics ID. <br>
-3. Calculate and paste into ```config.json``` , the time in seconds to launch **Rust** <br>
+3. Calculate and paste into ```config.json``` , the time in seconds to launch **Rust**. <br>
 
 | Variable                 | Type   | Default Value | Description                                                                                                                    |
 |--------------------------|--------|---------------|--------------------------------------------------------------------------------------------------------------------------------|
