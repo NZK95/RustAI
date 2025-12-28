@@ -8,7 +8,7 @@
 - Rust launch management.
   
 ## Known Issues
-> Disclaimer: The information displayed is sourced from the Battlemetrics API and may not always be completely accurate or up-to-date.  
+> The information displayed is sourced from the Battlemetrics API and may not always be completely accurate or up-to-date.  
 >             If some parameters cannot be retrieved, they will be automatically replaced with default values.
 
 - The bot may occasionally freeze due to API issues. Please wait and it should resume automatically.
