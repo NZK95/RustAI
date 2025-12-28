@@ -13,7 +13,7 @@
   
 ## Requirements
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
-- Configure the ```config.json```  file
+- Configured ```config.json```
 - Windows 10 or older
 - Telegram
 
@@ -42,9 +42,20 @@
 ## Usage
 See <a href="https://github.com/NZK95/RustAI/blob/master/docs/examples/players.png">examples of usage</a>
 
-| Command                 | Description                                                                                                                    |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `/start` or  `/menu`| Open the main menu with all commands.          |
+| Command                  | Description                                                                                                                      |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `/start`, `/menu`        | Open the main menu with all commands.                                                                                            |
+| `/players`, `/servers`   | Get player/server info by Battlemetrics ID. May include `.txt` exports (configurable in `config.json`).                         |
+| `/launch`                | Launch Rust.                                                                                                                     |
+| `/quit`                  | Close Rust.                                                                                                                      |
+| `/disconnect`            | Disconnect from server. Requires active connection. Auto-focuses Rust window.                                                   |
+| `/connect`               | Connect to selected server. Auto-launches Rust if needed, waits `RustLaunchDelaySeconds`, then connects. Auto-focuses window.   |
+| `/autoconnect`           | Auto-connect when server comes online. Useful for offline servers.                                                              |
+| `/status`                | Send connection status screenshot. Auto-focuses Rust. Ignored if Rust not running.                                              |
+| `/list`                  | List tracked players (format: `Name - Current Server`).                                                                         |
+| `/add`                   | Add player to tracking by Battlemetrics ID (max 20 players).                                                                    |
+| `/remove`                | Remove player from tracking by Battlemetrics ID.                                                                                |
+| `/clear`                 | Clear all tracked players.                                                                                                      |
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
