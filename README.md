@@ -44,7 +44,7 @@ See <a href="https://github.com/NZK95/RustAI/blob/master/docs/examples/players.p
 
 | Command                 | Description                                                                                                                    |
 |---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `/start` or` /menu`| Open the main menu with all commands.          |
+| `/start` or  `/menu`| Open the main menu with all commands.          |
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
