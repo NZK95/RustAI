@@ -9,6 +9,7 @@ namespace RustAI
 
         [JsonPropertyName("TelegramChatID")]
         public long? ChatID { get; set; }
+
         [JsonPropertyName("BattlemetricsID")]
         public string BattlemetricsID { get; set; }
 
