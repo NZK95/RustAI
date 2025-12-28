@@ -35,7 +35,7 @@
 | `ConnectTimerMinutes`    | Double | 10           | Used for `/connect`. Represents the delay in minutes. Connection starts when the timer expires.                               |
 | `TelegramChatID`         | Int64  | 0             | **Do not modify.** This value is automatically set on the first launch of the program.                                         |
 | `RustLaunchDelaySeconds` | Int32  | 60            | **Ensure the value is correct**. Delay in seconds before launching Rust after connection is established.                                                         |
-| `FavoriteServers` | List  | null            | The array of favorite servers, where `Name` is server identifier and `Id` his BattleMetrics ID.                                                    |
+| `FavoriteServers` | List  | null            | The array of favorite servers, where `Name` is server identifier and `Id` his BattleMetrics ID. There are some servers by default.                                                    |
 | `FavoritePlayers` | List  | null            | The array of favorite players, where `Name` is player identifier and `Id` his BattleMetrics ID.                                                    |
 | `TrackedPlayers` | List  | null            | The array of tracked players, where `Name` is player identifier, `Id` his BattleMetrics ID, and `CurrentServer` the last played server.                                             |
 | `GetPlayerNamesHistory`       | Boolean | `true`  | Send the `.txt` file with player's history of names during the `/players` command.                                                              |
