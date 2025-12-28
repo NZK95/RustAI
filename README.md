@@ -1,5 +1,9 @@
 [![Downloads](https://img.shields.io/github/downloads/NZK95/RustAI/total.svg)](https://github.com/NZK95/RustAI/releases)
 
+<p align="center">
+  <img src="https://github.com/NZK95/RustAI/blob/master/docs/examples/start.png?raw=true">
+</p>
+
 ## Features
 - Advanced server and player analytics.
 - Player tracking with allerts.
