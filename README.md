@@ -39,6 +39,7 @@
 > The program will not launch if the config is not set correctly.
 
 ## Usage
+See <a href="https://github.com/NZK95/RustAI/blob/master/docs/examples/players.png">examples of usage</a>
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
