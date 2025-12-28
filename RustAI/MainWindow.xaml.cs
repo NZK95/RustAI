@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace RustAI
 {
@@ -92,6 +93,17 @@ namespace RustAI
         {
             _notifyIcon.Visible = false;
             base.OnClosing(e);
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = e.Uri.ToString(),
+                UseShellExecute = true
+            });
+
+            e.Handled = true;
         }
     }
 }
