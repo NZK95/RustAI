@@ -67,12 +67,11 @@ server management and player tracking so you never miss a moment.
         public const string PrefixUpdatePSH = "Settings-UpdatePSH";
         public const string PrefixUpdateSWJ = "Settings-UpdateSWJ";
         public const string PrefixUpdateSP = "Settings-UpdateSP";
-
         public const string PrefixUpdateRLD = "Settings-UpdateRLD";
         public const string PrefixUpdateQL = "Settings-UpdateQL";
         public const string PrefixUpdateCT = "Settings-UpdateCT";
         public const string PrefixUpdateUID = "Settings-UpdateUID";
-
+        public const string PrefixUpdates = "Settings-CheckUpdates";
 
 
         public const string ClientConnectCommandPrefix = "client.connect ";

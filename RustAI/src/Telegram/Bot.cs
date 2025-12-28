@@ -608,6 +608,10 @@ namespace RustAI
                     await HandleUserMessageAsync("/clear");
                     break;
 
+                case Constants.PrefixUpdates:
+                    await CheckForNewVersion();
+                    break;
+
                 case Constants.PrefixSettings:
                     {
                         await _telegramClient.EditMessageCaption(

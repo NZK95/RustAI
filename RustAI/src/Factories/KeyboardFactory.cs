@@ -67,10 +67,15 @@ namespace RustAI
             rows.Add(new[]
             {
         InlineKeyboardButton.WithCallbackData("🔗 Connect", Constants.PrefixConnect),
-        InlineKeyboardButton.WithCallbackData("⚡ AutoConnect", Constants.PrefixAutoConnect),
+        InlineKeyboardButton.WithCallbackData("⚡ AutoConnect", Constants.PrefixAutoConnect)
+         });
+
+            rows.Add(new[]
+            {
         InlineKeyboardButton.WithCallbackData("🔌 Disconnect", Constants.PrefixDisconnect),
         InlineKeyboardButton.WithCallbackData("📊 Status", Constants.PrefixStatus)
-         });
+            });
+
 
             rows.Add(new[]
             {
@@ -83,6 +88,7 @@ namespace RustAI
             rows.Add(new[]
             {
         InlineKeyboardButton.WithCallbackData("⚙️ Settings", Constants.PrefixSettings),
+        InlineKeyboardButton.WithCallbackData("🔄 Check for updates", Constants.PrefixUpdates),
         InlineKeyboardButton.WithUrl("💻 GitHub", Builders.BuildRustAIProjectLink())
             });
 
