@@ -24,6 +24,7 @@
 
 | Variable                 | Type   | Default Value | Description                                                                                                                    |
 |--------------------------|--------|---------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `CurrentVersion`             | String  | N/A             | **Do not modify.** Rappresents the latest version of program. The value is set by default.           |
 | `QueueLimit`             | Int32  | 100             | Used for `/connect`. Represents the number of queued players. Connection starts when the queue reaches this number.           |
 | `ConnectTimerMinutes`    | Double | 10           | Used for `/connect`. Represents the delay in minutes. Connection starts when the timer expires.                               |
 | `TelegramChatID`         | Int64  | 0             | **Do not modify.** This value is automatically set on the first launch of the program.                                         |
@@ -43,7 +44,7 @@ See <a href="https://github.com/NZK95/RustAI/blob/master/docs/examples/players.p
 
 | Command                 | Description                                                                                                                    |
 |---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `/start` or`/menu`| Open the main menu with all commands.          |
+| `/start` or` /menu`| Open the main menu with all commands.          |
 
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).<br>
