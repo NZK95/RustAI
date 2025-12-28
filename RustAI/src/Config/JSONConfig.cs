@@ -12,6 +12,7 @@ namespace RustAI
         public static string PathToExportedPlayersServers { get; private set; }
         public static string PathToExportedServerPlayers { get; private set; }
         public static string TokenBot { get; set; }
+        public static string CurrentVersion { get; set; }
         public static long? ChatID { get; set; }
         public static string BattlemetricsID { get; set; }
         public static int RustLaunchDelaySeconds { get; set; }
@@ -69,6 +70,7 @@ namespace RustAI
             FavoritePlayers = deserializedBot.FavoritePlayers;
             QueueLimit = deserializedBot.QueueLimit;
             ConnectTimerMinutes = deserializedBot.ConnectTimerMinutes;
+            CurrentVersion = deserializedBot.CurrentVersion;
         }
     }
 }

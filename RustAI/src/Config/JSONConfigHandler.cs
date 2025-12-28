@@ -26,7 +26,8 @@ namespace RustAI
                 TrackedPlayers = JSONConfig.TrackedPlayers,
                 QueueLimit = JSONConfig.QueueLimit,
                 ConnectTimerMinutes = JSONConfig.ConnectTimerMinutes,
-                GetServerPlayers = JSONConfig.GetServerPlayers
+                GetServerPlayers = JSONConfig.GetServerPlayers,
+                CurrentVersion = JSONConfig.CurrentVersion
             };
 
             await File.WriteAllTextAsync(JSONConfig.PathToConfig, JsonSerializer.Serialize(config, _jsonOptions));

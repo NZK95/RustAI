@@ -1,5 +1,6 @@
 ﻿using System.Drawing.Imaging;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -80,6 +81,57 @@ namespace RustAI
 
             var me = _telegramClient.GetMe();
 
+            await CheckForNewVersion();
+            await SendInitialMessagges();
+        }
+
+        private async Task CheckForNewVersion()
+        {
+            if (!CompareVersions(JSONConfig.CurrentVersion, await GetLatestVersion()))
+            {
+                await SendMessageAsync(Messages.UpdateRequired);
+                return;
+            }
+
+            await SendMessageAsync(Messages.LatestVersion);
+        }
+
+        private async Task<string> GetLatestVersion()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", "TelegramBot");
+
+                var response = await client.GetAsync(Constants.ProjectRepositoryAPI);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var jsonDoc = JsonDocument.Parse(jsonResponse);
+                var latestVersion = jsonDoc.RootElement.GetProperty("tag_name").GetString();
+
+                return latestVersion;
+            }
+        }
+
+        private static bool CompareVersions(string current, string latest)
+        {
+            var currentVersionParts = current.Split('.').Select(int.Parse).ToArray();
+            var latestVersionParts = latest.Split('.').Select(int.Parse).ToArray();
+
+            for (int i = 0; i < Math.Min(currentVersionParts.Length, latestVersionParts.Length); i++)
+            {
+                if (currentVersionParts[i] < latestVersionParts[i])
+                    return false;
+
+                else if (currentVersionParts[i] > latestVersionParts[i])
+                    return true;
+            }
+
+            return true;
+        }
+
+        private async Task SendInitialMessagges()
+        {
             if (JSONConfig.ChatID != null)
             {
                 await SendMessageAsync(Messages.ProgramRunning);

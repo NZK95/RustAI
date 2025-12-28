@@ -49,7 +49,9 @@ namespace RustAI
         public const string UpdatedQueueLimit = "✅ Queue limit is successfully updated";
         public const string UpdateConnectTimer = "Enter new connect timer in minutes:";
         public const string UpdatedConnectTimer = "✅ Connect timer is successfully updated";
-        
+
+        public const string LatestVersion = "✅ You have the latest version.";
+        public const string UpdateRequired = "❗ A new version is available. Please update your app. You can download the latest version here: https://github.com/NZK95/RustAI/releases";
 
         public static async Task<string> BuildSettingsCaption()
         {

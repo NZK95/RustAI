@@ -12,6 +12,9 @@ namespace RustAI
         [JsonPropertyName("BattlemetricsID")]
         public string BattlemetricsID { get; set; }
 
+        [JsonPropertyName("CurrentVersion")]
+        public string CurrentVersion { get; set; }
+
         [JsonPropertyName("RustLaunchDelaySeconds")]
         public int RustLaunchDelaySeconds { get; set; }
 

@@ -17,6 +17,7 @@
         public const string GamePath = "steam://rungameid/252490";
 
         public const string ProjectName = "RustAI";
+        public const string ProjectRepositoryAPI = @"https://api.github.com/repos/NZK95/RustAI/releases/latest";
         public const string ProjectLogo = "https://raw.githubusercontent.com/NZK95/RustAI/master/RustAI/assets/images/logo.png";
         public static readonly string ProjectShortDescription = $"RustAI Bot - your personal Rust assistant\n{Builders.BuildRustAIProjectLink()}";
         public static readonly string ProjectStartMessage = $@"<b>What can this bot do?</b>
