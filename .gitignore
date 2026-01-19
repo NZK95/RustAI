@@ -12,6 +12,7 @@
 *.json
 *.slnx
 *.csproj
+.PublishProfiles
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
