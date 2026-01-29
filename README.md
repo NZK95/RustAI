@@ -19,9 +19,9 @@
   
 ## Requirements
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases) <br>
+- Windows x64
 - Configured ```config.json```
-- Windows 10 or older
-- Telegram
+- Telegram (Bot token)
 
 ## Config
 1. Get and paste into ```config.json``` a bot token with ```@BotFather``` bot in Telegram. <br>
