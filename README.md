@@ -27,16 +27,12 @@
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
----
-
 ## Features
 - Advanced server and player analytics.
 - Player tracking with alerts.
 - Smart notifications.
 - Server connection management with autoconnect.
 - Rust launch management.
-
----
 
 ## Known Issues
 
@@ -47,15 +43,11 @@
 > - The bot may occasionally freeze due to API issues — wait and it should resume automatically.
 > - `/disconnect` and `/autoconnect` commands may not work.
 
----
-
 ## Requirements
 - Windows x64
 - Configured `config.json`
 - Telegram bot token
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases)
-
----
 
 ## Config
 
@@ -82,11 +74,7 @@
 | `GetServerPlayers` | Boolean | `true` | Show current players on the server. |
 | `SendScreenshotWhenJoined` | Boolean | `false` | Auto-send screenshot when joining a server. |
 
----
-
 ## Usage
-
-See [examples](https://github.com/NZK95/RustAI/blob/master/docs/examples/players.png).
 
 | Command | Description |
 |---|---|
@@ -103,18 +91,15 @@ See [examples](https://github.com/NZK95/RustAI/blob/master/docs/examples/players
 | `/remove` | Remove player from tracking by Battlemetrics ID. |
 | `/clear` | Clear all tracked players. |
 
----
+> [!NOTE]
+> See [examples](https://github.com/NZK95/RustAI/blob/master/docs/examples/players.png).
 
 ## Resources
 - [BattleMetrics API](https://www.battlemetrics.com/developers/documentation)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
 
----
-
 ## Troubleshooting
 If you encounter errors or bugs, please report them via the [issue tracker](https://github.com/NZK95/RustAI/issues).
-
----
 
 ## License
 This project is licensed under the MIT License — see the [LICENSE](LICENSE.txt) file for details.
