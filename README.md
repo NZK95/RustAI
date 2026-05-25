@@ -45,6 +45,7 @@
 
 ## Requirements
 - Windows x64
+- Administrator privileges (for proper functioning of windows switching)
 - Configured `config.json`
 - Telegram bot token
 - Last version of **RustAI** from [`releases`](https://github.com/NZK95/RustAI/releases)
